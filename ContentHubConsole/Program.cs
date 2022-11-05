@@ -159,14 +159,14 @@ namespace ContentHubConsole
 
                 //##################
 
-                //var directoryPath = DesignEmailAssetDetailer.UploadPath;
                 var uploadMgr = new UploadManager(mClient, (string)Configuration["Sandboxes:0:Covetrus"], contentHubToken);
-                //await uploadMgr.UploadLocalDirectory(directoryPath, SearchOption.AllDirectories);
-                //await uploadMgr.UploadLargeFileLocalDirectory();
+                var directoryPath = DesignEmailAssetDetailer.UploadPath;
+                await uploadMgr.UploadLocalDirectory(directoryPath, SearchOption.AllDirectories);
+                await uploadMgr.UploadLargeFileLocalDirectory();
 
                 //var uploads = await GetMissingFiles(mClient);
 
-                var gpm = new DesignEmailAssetDetailer(mClient, FileUploadResponses);// uploadMgr.DirectoryFileUploadResponses);
+                var gpm = new DesignEmailAssetDetailer(mClient, uploadMgr.DirectoryFileUploadResponses);
                 await gpm.UpdateAllAssets();
                 await gpm.SaveAllAssets();
 
@@ -290,22 +290,6 @@ namespace ContentHubConsole
 
         public static List<FileUploadResponse> FileUploadResponses => new List<FileUploadResponse>
         {
-            new FileUploadResponse(0, @"C:\Users\ptjhi\Dropbox (Covetrus)\Consumer Creative\GPM\2022\Photo Assets\Kruuse\276520-276595 BUSTER Toy w. dog_007.jpg"),
-            new FileUploadResponse(0, @"C:\Users\ptjhi\Dropbox (Covetrus)\Consumer Creative\GPM\2022\Photo Assets\Kruuse\276520-276595 BUSTER Toy w. dog_008.jpg"),
-            new FileUploadResponse(0, @"C:\Users\ptjhi\Dropbox (Covetrus)\Consumer Creative\GPM\2022\Photo Assets\Kruuse\276520-276595 BUSTER Toy w. dog_010.jpg"),
-            new FileUploadResponse(0, @"C:\Users\ptjhi\Dropbox (Covetrus)\Consumer Creative\GPM\2022\Photo Assets\Kruuse\276520-276595 BUSTER Toy w. dog_017.jpg"),
-            new FileUploadResponse(0, @"C:\Users\ptjhi\Dropbox (Covetrus)\Consumer Creative\GPM\2022\Photo Assets\Kruuse\276520-276595 BUSTER Toy w. dog_018.jpg"),
-            new FileUploadResponse(0, @"C:\Users\ptjhi\Dropbox (Covetrus)\Consumer Creative\GPM\2022\Photo Assets\Kruuse\276520-276595 BUSTER Toy w. dog_021_ret.jpg"),
-            new FileUploadResponse(0, @"C:\Users\ptjhi\Dropbox (Covetrus)\Consumer Creative\GPM\2022\Photo Assets\Kruuse\276520-276595 BUSTER Toy w. dog_087.jpg"),
-            new FileUploadResponse(0, @"C:\Users\ptjhi\Dropbox (Covetrus)\Consumer Creative\GPM\2022\Photo Assets\Product (PNG)\GPM Equine March 2022 - Best Sellers Group_0506.tif"),
-            new FileUploadResponse(0, @"C:\Users\ptjhi\Dropbox (Covetrus)\Consumer Creative\GPM\2022\Photo Assets\Stock (Edits)\Equine\GPM Equine March 2022 - Best Sellers Group_0487.tif"),
-            new FileUploadResponse(0, @"C:\Users\ptjhi\Dropbox (Covetrus)\Consumer Creative\GPM\2022\Photography\Photoshoots In Studio\Equine\GPM Equine March 2022 - Best Sellers Group_0417.tif"),
-            new FileUploadResponse(0, @"C:\Users\ptjhi\Dropbox (Covetrus)\Consumer Creative\GPM\2022\Photography\Photoshoots In Studio\Equine\GPM Equine March 2022 - Best Sellers Group_0491.tif"),
-            new FileUploadResponse(0, @"C:\Users\ptjhi\Dropbox (Covetrus)\Consumer Creative\GPM\2022\Photography\Photoshoots In Studio\Equine\GPM Equine March 2022 - Equioxx Pills_0370.tif"),
-            new FileUploadResponse(0, @"C:\Users\ptjhi\Dropbox (Covetrus)\Consumer Creative\GPM\2022\Photography\Photoshoots In Studio\Companion\DailyDeals\DailyDeal(02)_InterceptorPlus_FB(04)_46.tif"),
-            new FileUploadResponse(0, @"C:\Users\ptjhi\Dropbox (Covetrus)\Consumer Creative\GPM\2022\Photography\Photoshoots In Studio\Companion\Product in Boxes\DasuquinFelineSprinkle_15558.tif"),
-            new FileUploadResponse(0, @"C:\Users\ptjhi\Dropbox (Covetrus)\Consumer Creative\GPM\2022\Photography\Photoshoots In Studio\Companion\Product in Boxes\FortifloraFeline_15593.tif"),
-            new FileUploadResponse(0, @"C:\Users\ptjhi\Dropbox (Covetrus)\Consumer Creative\GPM\2022\Photography\Photoshoots In Studio\Companion\Product in Boxes\Zylkene_15566.tif")
         };
 
         static void RunAsAService()
