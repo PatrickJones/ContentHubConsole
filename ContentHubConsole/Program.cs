@@ -49,6 +49,7 @@ using Stylelabs.M.Base.Querying;
 using static Stylelabs.M.Sdk.Constants;
 using System.ServiceProcess;
 using System.Reflection;
+using ContentHubConsole.ContentHubClients.Covetrus.Assets.SmartPak;
 
 namespace ContentHubConsole
 {
@@ -124,7 +125,8 @@ namespace ContentHubConsole
                 //##################
 
                 //var tax = new CovetrusTaxonomyManager(mClient);
-                //await tax.LoadAllTaxonomies();
+                //var taxId = await tax.AddTagValue("safari lion");
+                //var i = 0;
 
                 //var sharedBusinessDomainId = tax.BusinessDomainEntities.Where(w => w.Identifier.Contains("Shared")).FirstOrDefault().Id;
 
@@ -160,13 +162,13 @@ namespace ContentHubConsole
                 //##################
 
                 var uploadMgr = new UploadManager(mClient, (string)Configuration["Sandboxes:0:Covetrus"], contentHubToken);
-                var directoryPath = DesignEmailAssetDetailer.UploadPath;
+                var directoryPath = DesignYearlyAssetDetailer.UploadPath;
                 await uploadMgr.UploadLocalDirectory(directoryPath, SearchOption.AllDirectories);
                 await uploadMgr.UploadLargeFileLocalDirectory();
 
                 //var uploads = await GetMissingFiles(mClient);
 
-                var gpm = new DesignEmailAssetDetailer(mClient, uploadMgr.DirectoryFileUploadResponses);
+                var gpm = new DesignYearlyAssetDetailer(mClient, uploadMgr.DirectoryFileUploadResponses);
                 await gpm.UpdateAllAssets();
                 await gpm.SaveAllAssets();
 
@@ -180,7 +182,7 @@ namespace ContentHubConsole
                         failedFiles.Add(uploadFailedFile);
                     }
 
-                    var gpmRetry = new DesignEmailAssetDetailer(mClient, failedFiles);
+                    var gpmRetry = new DesignYearlyAssetDetailer(mClient, failedFiles);
                     await gpmRetry.UpdateAllAssets();
                     await gpmRetry.SaveAllAssets();
 
@@ -191,8 +193,6 @@ namespace ContentHubConsole
                         FileLogger.Log("Program", fp);
                     }
                 }
-
-
 
                 Console.WriteLine($"Completed {gpm._covetrusAsset.Count}");
                 FileLogger.Log("Program", $"Completed {gpm._covetrusAsset.Count}");

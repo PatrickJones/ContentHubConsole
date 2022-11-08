@@ -24,10 +24,11 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Taxonomy
         public readonly string CV_WEEK = "CV.Week";
         public readonly string CV_YEAR = "CV.Year";
         public readonly string CV_ASSET_USAGE = "CV.AssetUsage";
+        public readonly string CV_SEASON = "CV.Season";
 
         public ICollection<IEntity> BusinessDomainEntities = new List<IEntity>();
         public ICollection<IEntity> MigrationOriginEntities = new List<IEntity>();
-        public ICollection<IEntity> MaanufacturerEntities = new List<IEntity>();
+        public ICollection<IEntity> ManufacturerEntities = new List<IEntity>();
         public ICollection<IEntity> YearEntities = new List<IEntity>();
         public ICollection<IEntity> MonthEntities = new List<IEntity>();
         public ICollection<IEntity> WeekEntities = new List<IEntity>();
@@ -35,6 +36,7 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Taxonomy
         public ICollection<IEntity> PracticeTypeEntities = new List<IEntity>();
         public ICollection<IEntity> WebPageEntities = new List<IEntity>();
         public ICollection<IEntity> AssetUsageEntities = new List<IEntity>();
+        public ICollection<IEntity> SeasonEntities = new List<IEntity>();
 
         public CovetrusTaxonomyManager(IWebMClient webMClient) : base(webMClient)
         {
@@ -56,8 +58,18 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Taxonomy
             tasks.Add(LoadPractice());
             tasks.Add(LoadPracticeType());
             tasks.Add(LoadAssetUsages());
+            tasks.Add(LoadSeasons());
 
             await tasks.WhenAll();
+        }
+
+        private async Task LoadSeasons(int skip = 0, int take = 100)
+        {
+            if (!MigrationOriginEntities.Any())
+            {
+                var seasons = await _webMClient.Entities.GetByDefinitionAsync(CV_SEASON, null, skip, take);
+                SeasonEntities = seasons.Items.ToList();
+            }
         }
 
         private async Task LoadBusinessDomains(int skip = 0, int take = 100)
@@ -80,10 +92,10 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Taxonomy
 
         private async Task LoadManufacturers(int skip = 0, int take = 100)
         {
-            if (!MaanufacturerEntities.Any())
+            if (!ManufacturerEntities.Any())
             {
                 var maufacturers = await _webMClient.Entities.GetByDefinitionAsync(CV_MANUFACTURER, null, skip, take);
-                MaanufacturerEntities = maufacturers.Items.ToList();
+                ManufacturerEntities = maufacturers.Items.ToList();
             }
         }
 

@@ -112,6 +112,8 @@ namespace ContentHubConsole.Assets
                 var uploadTasks = new List<Task>();
 
                 var files = Directory.GetFiles(directoryPath, "*.*", searchOption);
+                Console.WriteLine($"Total files from directory: {files.Count()}");
+                FileLogger.Log("UploadLocalDirectory", $"Total files from directory: {files.Count()}");
                 foreach (var file in files)
                 {
                     var fileInfo = new FileInfo(file);
@@ -196,6 +198,7 @@ namespace ContentHubConsole.Assets
                 _ when extension.Equals(".png", StringComparison.InvariantCultureIgnoreCase) => "image/png",
                 _ when extension.Equals(".tiff", StringComparison.InvariantCultureIgnoreCase) => "image/tiff",
                 _ when extension.Equals(".tif", StringComparison.InvariantCultureIgnoreCase) => "image/tiff",
+                _ when extension.Equals(".ttf", StringComparison.InvariantCultureIgnoreCase) => "font/ttf",
                 _ when extension.Equals(".mp4", StringComparison.InvariantCultureIgnoreCase) => "video/mp4",
                 _ when extension.Equals(".mov", StringComparison.InvariantCultureIgnoreCase) => "video/quicktime",
                 _ when extension.Equals(".zip", StringComparison.InvariantCultureIgnoreCase) => "application/zip",

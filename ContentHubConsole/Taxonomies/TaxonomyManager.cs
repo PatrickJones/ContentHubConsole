@@ -1,9 +1,13 @@
 ﻿using Nito.AsyncEx;
+using Stylelabs.M.Base.Querying;
+using Stylelabs.M.Base.Querying.Linq;
 using Stylelabs.M.Sdk.Contracts.Base;
 using Stylelabs.M.Sdk.Contracts.Querying;
 using Stylelabs.M.Sdk.WebClient;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -19,6 +23,7 @@ namespace ContentHubConsole.Taxonomies
         public readonly string M_PCM_PRODUCT_CATEGORY = "M.PCM.ProductCategory";
         public readonly string M_PCM_PRODUCT_FAMILY = "M.PCM.ProductFamily";
         public readonly string M_PCM_PRODUCT_STATUS = "M.PCM.ProductStatus";
+        public readonly string M_TAG = "M.Tag";
 
         public ICollection<IEntity> AssetTypeEntities = new List<IEntity>();
         public ICollection<IEntity> CatalogEntities = new List<IEntity>();
@@ -53,6 +58,57 @@ namespace ContentHubConsole.Taxonomies
         {
             var entities = await _webMClient.Entities.GetByDefinitionAsync(definitionName, null, skip, take);
             return entities.Items.ToList();
+        }
+
+        public async Task<long> AddTagValue(string tagValue)
+        {
+            var tagLower = tagValue.ToLower();
+            var tagValueTrimmed = CondenseValue(tagLower);
+            try
+            {
+                var query = Query.CreateQuery(entities =>
+                 (from e in entities
+                  where e.DefinitionName == M_TAG && e.Property("TagName") == tagLower
+                  select e).Skip(0).Take(100));
+                var mq = await _webMClient.Querying.QueryAsync(query);
+                
+
+                if (mq.Items.Any())
+                {
+                    var tags = mq.Items.ToList();
+                    return tags.Select(s => s.Id.Value).FirstOrDefault();
+                }
+
+                if (!String.IsNullOrEmpty(tagValueTrimmed))
+                {
+                    var tagEntity = await _webMClient.EntityFactory.CreateAsync(M_TAG);
+                    tagEntity.Identifier = $"{M_TAG}.{tagValueTrimmed}";
+                    tagEntity.SetPropertyValue("TagName", tagLower);
+                    tagEntity.SetPropertyValue("TagLabel", CultureInfo.CurrentCulture, tagLower);
+
+                    return await _webMClient.Entities.SaveAsync(tagEntity);
+                }
+            }
+            catch (Exception ex)
+            {
+                var error = $"Error adding new M.Tag: {tagLower}";
+                Console.WriteLine(error);
+                FileLogger.Log("AddTagValue", error);
+            }
+
+            return 0;
+        }
+
+        private string CondenseValue(string tagValue)
+        {
+            var split = tagValue.Trim().Split(' ').ToArray();
+            var result = String.Empty;
+            foreach (var item in split)
+            {
+                result = result + item;
+            }
+
+            return result.ToLower();
         }
 
         private async Task LoadProductStatus(int skip = 0, int take = 100)
