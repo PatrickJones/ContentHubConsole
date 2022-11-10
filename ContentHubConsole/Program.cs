@@ -50,6 +50,9 @@ using static Stylelabs.M.Sdk.Constants;
 using System.ServiceProcess;
 using System.Reflection;
 using ContentHubConsole.ContentHubClients.Covetrus.Assets.SmartPak;
+using static Stylelabs.M.Sdk.Errors;
+using System.Net;
+using Stylelabs.M.Sdk.Models.Base;
 
 namespace ContentHubConsole
 {
@@ -60,7 +63,7 @@ namespace ContentHubConsole
         static IConfigurationRefresher _refresher;
 
         private static string contentHubToken = "1988a091087648b7875a4ce826851bdb";
-        private static string _serviceName = "2022UnProcessed";
+        private static string _serviceName = "SP-BrnadsUnProcessed";
 
         static async Task Main(string[] args)
         {
@@ -124,6 +127,14 @@ namespace ContentHubConsole
 
                 //##################
 
+                //var em = new EntityManager(mClient);
+                //var mig = await em.GetMigratedAssetsWithNoType();
+
+                //##################
+
+
+                //##################
+
                 //var tax = new CovetrusTaxonomyManager(mClient);
                 //var taxId = await tax.AddTagValue("safari lion");
                 //var i = 0;
@@ -162,13 +173,13 @@ namespace ContentHubConsole
                 //##################
 
                 var uploadMgr = new UploadManager(mClient, (string)Configuration["Sandboxes:0:Covetrus"], contentHubToken);
-                var directoryPath = DesignYearlyAssetDetailer.UploadPath;
+                var directoryPath = DesignBasicAssetDetailer.UploadPath;
                 await uploadMgr.UploadLocalDirectory(directoryPath, SearchOption.AllDirectories);
                 await uploadMgr.UploadLargeFileLocalDirectory();
 
                 //var uploads = await GetMissingFiles(mClient);
 
-                var gpm = new DesignYearlyAssetDetailer(mClient, uploadMgr.DirectoryFileUploadResponses);
+                var gpm = new DesignBasicAssetDetailer(mClient, uploadMgr.DirectoryFileUploadResponses);
                 await gpm.UpdateAllAssets();
                 await gpm.SaveAllAssets();
 
@@ -182,7 +193,7 @@ namespace ContentHubConsole
                         failedFiles.Add(uploadFailedFile);
                     }
 
-                    var gpmRetry = new DesignYearlyAssetDetailer(mClient, failedFiles);
+                    var gpmRetry = new DesignBasicAssetDetailer(mClient, failedFiles);
                     await gpmRetry.UpdateAllAssets();
                     await gpmRetry.SaveAllAssets();
 

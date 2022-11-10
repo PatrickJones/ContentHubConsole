@@ -173,6 +173,21 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Assets
             }
         }
 
+        internal void SetAdvertising(CovetrusAsset asset)
+        {
+            if (asset.OriginPath.Contains("Advertising") || asset.OriginPath.Contains("Advertise"))
+            {
+                List<long> usageIds = _taxonomyManager.AssetUsageEntities
+                .Where(w => w.Identifier.Contains("Advertising"))
+                .Select(s => s.Id.Value).ToList();
+
+                foreach (var usage in usageIds)
+                {
+                    asset.AddChildToManyParentsRelation(usage, RelationNames.RELATION_ASSETUSAGE_TOASSET);
+                }
+            }
+        }
+
         internal void SetProductUsage(CovetrusAsset asset)
         {
             if (asset.OriginPath.Contains("Product") || asset.OriginPath.Contains("Kruuse"))
@@ -450,6 +465,18 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Assets
         public virtual long GetYearIdFromPath(string originPath)
         {
             var pathSplit = originPath.Split('\\');
+            if (pathSplit.Any(a => a.Equals("2019")))
+            {
+                var tax = _taxonomyManager.YearEntities.Where(w => w.Identifier.Contains("2019")).FirstOrDefault();
+                return tax.Id.Value;
+            }
+
+            if (pathSplit.Any(a => a.Equals("2020")))
+            {
+                var tax = _taxonomyManager.YearEntities.Where(w => w.Identifier.Contains("2020")).FirstOrDefault();
+                return tax.Id.Value;
+            }
+
             if (pathSplit.Any(a => a.Equals("2021")))
             {
                 var tax = _taxonomyManager.YearEntities.Where(w => w.Identifier.Contains("2021")).FirstOrDefault();

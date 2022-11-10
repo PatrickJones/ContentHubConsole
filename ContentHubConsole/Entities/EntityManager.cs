@@ -1,7 +1,14 @@
-﻿using Stylelabs.M.Framework.Essentials.LoadOptions;
+﻿using Azure;
+using ContentHubConsole.Assets;
+using ContentHubConsole.ContentHubClients.Covetrus.Assets.SmartPak;
+using Stylelabs.M.Base.Querying;
+using Stylelabs.M.Base.Querying.Linq;
+using Stylelabs.M.Framework.Essentials.LoadOptions;
 using Stylelabs.M.Sdk.WebClient;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -60,6 +67,79 @@ namespace ContentHubConsole.Entities
                 FileLogger.Log("AddEntityRelation", ex.Message);
                 return 0;
             }
+        }
+
+        public async Task<List<FileUploadResponse>> GetMigratedAssetsWithNoType()
+        {
+            var fileUploadResponses = new List<FileUploadResponse>();
+
+            try
+            {
+                var query = Query.CreateQuery(entities =>
+                 (from e in entities
+                  where e.DefinitionName == "M.Asset"
+                    && e.Parent("AssetTypeToAsset") == null
+                    && e.ModifiedByUsername == "patrick.jones@xcentium.com"
+                    && e.Property("OriginPath") == String.Empty
+                    && e.ModifiedOn > new DateTime(2022, 11, 8)
+                  select e).Skip(0).Take(5000));
+                var mq = await _webMClient.Querying.QueryAsync(query);
+
+
+                if (mq.Items.Any())
+                {
+                    Console.WriteLine($"Assets found: {mq.Items.Count}");
+                    var tags = mq.Items.ToList();
+                    var assets = tags.Select(s => new { AsssetId = s.Id.Value, Filename = s.GetPropertyValue<string>("FileName") } ).ToList();
+                    //return (assets.AsssetId, assets.Filename);
+
+                    
+                    foreach (var asset in assets)
+                    {
+                        try
+                        {
+                            var files = Directory.GetFiles(DesignBasicAssetDetailer.UploadPath, asset.Filename, SearchOption.AllDirectories).Distinct();
+                            if (files.Any() && files.Count() == 1)
+                            {
+                                fileUploadResponses.Add(new FileUploadResponse(asset.AsssetId, files.FirstOrDefault()));
+                            }
+
+                            if (files.Any() && files.Count() > 1)
+                            {
+                                var filtered = files.Except(fileUploadResponses.Select(s => s.LocalPath).ToList());
+                                fileUploadResponses.Add(new FileUploadResponse(asset.AsssetId, filtered.FirstOrDefault()));
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"Error getting path for asset id: {asset.AsssetId}. Messsage: {ex.Message}");
+                            continue;
+                        }
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("No assets found.");
+                }
+
+                //if (!String.IsNullOrEmpty(tagValueTrimmed))
+                //{
+                //    var tagEntity = await _webMClient.EntityFactory.CreateAsync(M_TAG);
+                //    tagEntity.Identifier = $"{M_TAG}.{tagValueTrimmed}";
+                //    tagEntity.SetPropertyValue("TagName", tagLower);
+                //    tagEntity.SetPropertyValue("TagLabel", CultureInfo.CurrentCulture, tagLower);
+
+                //    return await _webMClient.Entities.SaveAsync(tagEntity);
+                //}
+            }
+            catch (Exception ex)
+            {
+                var error = $"Error assets";
+                Console.WriteLine(error);
+                FileLogger.Log("AddTagValue", error);
+            }
+
+            return fileUploadResponses;
         }
     }
 }

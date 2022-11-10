@@ -24,6 +24,7 @@ namespace ContentHubConsole.Taxonomies
         public readonly string M_PCM_PRODUCT_FAMILY = "M.PCM.ProductFamily";
         public readonly string M_PCM_PRODUCT_STATUS = "M.PCM.ProductStatus";
         public readonly string M_TAG = "M.Tag";
+        public readonly string M_BRAND = "M.Brand";
 
         public ICollection<IEntity> AssetTypeEntities = new List<IEntity>();
         public ICollection<IEntity> CatalogEntities = new List<IEntity>();
@@ -99,7 +100,48 @@ namespace ContentHubConsole.Taxonomies
             return 0;
         }
 
-        private string CondenseValue(string tagValue)
+        public async Task<long> AddBrandValue(string brandValue)
+        {
+            var tagLower = brandValue;
+            var tagValueTrimmed = CondenseValue(tagLower, false);
+            try
+            {
+                var query = Query.CreateQuery(entities =>
+                 (from e in entities
+                  where e.DefinitionName == M_BRAND && e.Property("BrandName") == tagLower
+                  select e).Skip(0).Take(100));
+                var mq = await _webMClient.Querying.QueryAsync(query);
+
+
+                if (mq.Items.Any())
+                {
+                    var tags = mq.Items.ToList();
+                    return tags.Select(s => s.Id.Value).FirstOrDefault();
+                }
+
+                if (!String.IsNullOrEmpty(tagValueTrimmed))
+                {
+                    var tagEntity = await _webMClient.EntityFactory.CreateAsync(M_BRAND);
+                    tagEntity.Identifier = $"{M_BRAND}.{tagValueTrimmed}";
+                    tagEntity.SetPropertyValue("BrandName", tagLower);
+                    tagEntity.SetPropertyValue("BrandSynonyms", CultureInfo.CurrentCulture, tagLower);
+                    tagEntity.SetPropertyValue("BrandDescription", CultureInfo.CurrentCulture, tagLower);
+                    tagEntity.SetPropertyValue("BrandLabel", CultureInfo.CurrentCulture, tagLower);
+
+                    return await _webMClient.Entities.SaveAsync(tagEntity);
+                }
+            }
+            catch (Exception ex)
+            {
+                var error = $"Error adding new M.Brand: {tagLower}";
+                Console.WriteLine(error);
+                FileLogger.Log("AddBrandValue", error);
+            }
+
+            return 0;
+        }
+
+        private string CondenseValue(string tagValue, bool allLower = true)
         {
             var split = tagValue.Trim().Split(' ').ToArray();
             var result = String.Empty;
@@ -108,7 +150,7 @@ namespace ContentHubConsole.Taxonomies
                 result = result + item;
             }
 
-            return result.ToLower();
+            return allLower ? result.ToLower() : result;
         }
 
         private async Task LoadProductStatus(int skip = 0, int take = 100)
