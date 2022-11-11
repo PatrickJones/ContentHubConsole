@@ -46,7 +46,7 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Assets
         {
             var tasks = new List<Task>();
 
-            foreach (var asset in _covetrusAsset)
+            foreach (var asset in _covetrusAsset.Where(w => w.Errors.Count() == 0))
             {
                 tasks.Add(asset.SaveAsset());
             }

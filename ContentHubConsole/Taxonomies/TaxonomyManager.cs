@@ -171,7 +171,7 @@ namespace ContentHubConsole.Taxonomies
             }
         }
 
-        private async Task LoadProductCategories(int skip = 0, int take = 100)
+        private async Task LoadProductCategories(int skip = 0, int take = 2000)
         {
             if (!ProductCategoryEntities.Any())
             {

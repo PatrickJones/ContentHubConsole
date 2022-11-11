@@ -36,20 +36,22 @@ namespace ContentHubConsole.Assets
 
         public async Task<FileUploadResponse> UploadLocalFile(string path)
         {
-            var fileInfo = new FileInfo(path);
-            byte[] fileBytes = File.ReadAllBytes(path);
-
-            if (fileInfo.Length > MAX_FILE_SIZE_BYTES)
-            {
-                return await UploadLargeLocalFile(path);
-            }
-
-            var uploadSource = new LocalUploadSource(path, fileInfo.Name);
-            var request = new UploadRequest(uploadSource, UPLOAD_CONFIGURATION, "NewAsset");
+            
             var fileUploadResponse = new FileUploadResponse(0, path);
 
             try
             {
+                var fileInfo = new FileInfo(path);
+                byte[] fileBytes = File.ReadAllBytes(path);
+
+                if (fileInfo.Length > MAX_FILE_SIZE_BYTES)
+                {
+                    return await UploadLargeLocalFile(path);
+                }
+
+                var uploadSource = new LocalUploadSource(path, fileInfo.Name);
+                var request = new UploadRequest(uploadSource, UPLOAD_CONFIGURATION, "NewAsset");
+
                 // Initiate upload and wait for its completion.
                 var response = await _webMClient.Uploads.UploadAsync(request).ConfigureAwait(false);
 
@@ -72,15 +74,16 @@ namespace ContentHubConsole.Assets
 
         public async Task<FileUploadResponse> UploadLargeLocalFile(string path)
         {
-            var fileInfo = new FileInfo(path);
-            byte[] fileBytes = File.ReadAllBytes(path);
-
-            var uploadSource = new LocalUploadSource(path, fileInfo.Name);
-            var request = new UploadRequest(uploadSource, UPLOAD_CONFIGURATION, "NewAsset");
             var fileUploadResponse = new FileUploadResponse(0, path);
 
             try
             {
+                var fileInfo = new FileInfo(path);
+                byte[] fileBytes = File.ReadAllBytes(path);
+
+                var uploadSource = new LocalUploadSource(path, fileInfo.Name);
+                var request = new UploadRequest(uploadSource, UPLOAD_CONFIGURATION, "NewAsset");
+
                 var uploadRequest = new LargeUploadRequest(fileInfo.Name,
                     GetMediaType(fileInfo.Extension),
                     fileBytes.LongLength,
@@ -116,14 +119,25 @@ namespace ContentHubConsole.Assets
                 FileLogger.Log("UploadLocalDirectory", $"Total files from directory: {files.Count()}");
                 foreach (var file in files)
                 {
-                    var fileInfo = new FileInfo(file);
-                    if (fileInfo.Length > MAX_FILE_SIZE_BYTES)
+                    try
                     {
-                        _largeFilePaths.Add(file);
+                        var fileInfo = new FileInfo(file);
+                        if (fileInfo.Length > MAX_FILE_SIZE_BYTES)
+                        {
+                            _largeFilePaths.Add(file);
+                        }
+                        else
+                        {
+                            uploadTasks.Add(UploadLocalFile(file));
+                        }
                     }
-                    else
+                    catch (Exception ex)
                     {
-                        uploadTasks.Add(UploadLocalFile(file));
+                        DirectoryFileUploadResponses.Add(new FileUploadResponse(0, file));
+
+                        Console.WriteLine(ex.Message);
+                        FileLogger.Log("UploadLocalDirectory", ex.Message);
+                        continue;
                     }
                 }
 
@@ -178,12 +192,12 @@ namespace ContentHubConsole.Assets
 
                 var log = "Done getting large files from directory.";
                 Console.WriteLine(log);
-                FileLogger.Log("UploadLocalDirectory", log);
+                FileLogger.Log("UploadLargeFileLocalDirectory", log);
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
-                FileLogger.Log("UploadLocalDirectory", ex.Message);
+                FileLogger.Log("UploadLargeFileLocalDirectory", ex.Message);
             }
         }
 
@@ -213,6 +227,7 @@ namespace ContentHubConsole.Assets
                 _ when extension.Equals(".html", StringComparison.InvariantCultureIgnoreCase) => "text/html",
                 //_ when extension.Equals(".ai", StringComparison.InvariantCultureIgnoreCase) => "application/postscript",
                 //_ when extension.Equals(".eps", StringComparison.InvariantCultureIgnoreCase) => "application/postscript",
+                //_ when extension.Equals(".indd", StringComparison.InvariantCultureIgnoreCase) => " application/x-indesign",
                 _ when extension.Equals(".jpf", StringComparison.InvariantCultureIgnoreCase) => "image/x-jpf",
                 _ => throw new NotImplementedException()
             };

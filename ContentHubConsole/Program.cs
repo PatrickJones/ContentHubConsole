@@ -63,7 +63,7 @@ namespace ContentHubConsole
         static IConfigurationRefresher _refresher;
 
         private static string contentHubToken = "1988a091087648b7875a4ce826851bdb";
-        private static string _serviceName = "SP-BrnadsUnProcessed";
+        private static string _serviceName = "SP-ImgBarnLogosUnProcessed";
 
         static async Task Main(string[] args)
         {
@@ -135,7 +135,31 @@ namespace ContentHubConsole
 
                 //##################
 
-                //var tax = new CovetrusTaxonomyManager(mClient);
+                //try
+                //{
+                //    var tax = new CovetrusTaxonomyManager(mClient);
+                //    await tax.LoadAllDefaultTaxonomies();
+                //    var list = tax.ProductCategoryEntities.Where(w => w.Identifier != "M.PCM.ProductCategory.CONA"
+                //    || w.Identifier != "M.PCM.ProductCategory.GPMSmartPak" || w.Identifier != "M.PCM.ProductCategory.GPMSmartPak.Accessories");
+                //    foreach (var item in list)
+                //    {
+                //        try
+                //        {
+                //            await mClient.Entities.DeleteAsync(item.Id.Value);
+                //        }
+                //        catch (Exception e)
+                //        {
+                //            Console.WriteLine($"Looping error: {e.Message}");
+                //            continue;
+                //        }
+
+                //    }
+                //}
+                //catch (Exception ex)
+                //{
+                //    Console.WriteLine(ex.Message);
+                //}
+
                 //var taxId = await tax.AddTagValue("safari lion");
                 //var i = 0;
 
@@ -173,13 +197,13 @@ namespace ContentHubConsole
                 //##################
 
                 var uploadMgr = new UploadManager(mClient, (string)Configuration["Sandboxes:0:Covetrus"], contentHubToken);
-                var directoryPath = DesignBasicAssetDetailer.UploadPath;
+                var directoryPath = PhotographyLogoAssetDetailer.UploadPath;
                 await uploadMgr.UploadLocalDirectory(directoryPath, SearchOption.AllDirectories);
                 await uploadMgr.UploadLargeFileLocalDirectory();
 
                 //var uploads = await GetMissingFiles(mClient);
 
-                var gpm = new DesignBasicAssetDetailer(mClient, uploadMgr.DirectoryFileUploadResponses);
+                var gpm = new PhotographyLogoAssetDetailer(mClient, uploadMgr.DirectoryFileUploadResponses);
                 await gpm.UpdateAllAssets();
                 await gpm.SaveAllAssets();
 
@@ -193,9 +217,13 @@ namespace ContentHubConsole
                         failedFiles.Add(uploadFailedFile);
                     }
 
-                    var gpmRetry = new DesignBasicAssetDetailer(mClient, failedFiles);
+                    var gpmRetry = new PhotographyLogoAssetDetailer(mClient, failedFiles);
                     await gpmRetry.UpdateAllAssets();
                     await gpmRetry.SaveAllAssets();
+
+                    var ffc = $"Failed files count: {gpmRetry._failedAssets.Count}";
+                    Console.WriteLine(ffc);
+                    FileLogger.Log("Program", ffc);
 
                     foreach (var failed in gpmRetry._failedAssets)
                     {
