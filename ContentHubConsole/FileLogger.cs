@@ -23,8 +23,17 @@ namespace ContentHubConsole
             string executableLocation = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
             string location = Path.Combine(executableLocation, $"{_logFileName}.txt");
 
-            using StreamWriter file = new(location, append: true);
+            using StreamWriter file = new(location, append);
             file.WriteLine(text);
+        }
+
+        public static void AddToFailedUploadLog(string filePath)
+        {
+            string executableLocation = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            string location = @"D:\Users\ptjhi\Documents\Xcentium\Covetrus\Data Migration\AdobeFilesPausedForUpload.txt";
+
+            using StreamWriter file = new(location, append: true);
+            file.WriteLine(filePath);
         }
     }
 }

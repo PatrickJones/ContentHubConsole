@@ -230,6 +230,7 @@ namespace ContentHubConsole
                         var fp = $"{failed.OriginPath}";
                         Console.WriteLine(fp);
                         FileLogger.Log("Program", fp);
+                        FileLogger.AddToFailedUploadLog(failed.OriginPath);
                     }
                 }
 
