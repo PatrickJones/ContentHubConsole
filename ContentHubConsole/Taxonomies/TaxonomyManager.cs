@@ -141,7 +141,8 @@ namespace ContentHubConsole.Taxonomies
             return 0;
         }
 
-        private string CondenseValue(string tagValue, bool allLower = true)
+
+        internal string CondenseValue(string tagValue, bool allLower = true)
         {
             var split = tagValue.Trim().Split(' ').ToArray();
             var result = String.Empty;
