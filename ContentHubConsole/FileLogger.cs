@@ -29,11 +29,33 @@ namespace ContentHubConsole
 
         public static void AddToFailedUploadLog(string filePath)
         {
-            string executableLocation = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
             string location = @"D:\Users\ptjhi\Documents\Xcentium\Covetrus\Data Migration\AdobeFilesPausedForUpload.txt";
 
-            using StreamWriter file = new(location, append: true);
-            file.WriteLine(filePath);
+            var existingPaths = new List<string>();
+
+            StreamReader reader = null;
+            if (File.Exists(location))
+            {
+                reader = new StreamReader(File.OpenRead(location));
+                while (!reader.EndOfStream)
+                {
+                    var line = reader.ReadLine();
+                    existingPaths.Add(line);
+                }
+
+                reader.Close();
+                reader.Dispose();
+            }
+            else
+            {
+                Console.WriteLine("File doesn't exist");
+            }
+
+            if (!existingPaths.Any(a => a.Equals(filePath)))
+            {
+                using StreamWriter file = new(location, append: true);
+                file.WriteLine(filePath);
+            }
         }
     }
 }

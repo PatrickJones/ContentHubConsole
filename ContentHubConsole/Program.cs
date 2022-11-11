@@ -63,7 +63,7 @@ namespace ContentHubConsole
         static IConfigurationRefresher _refresher;
 
         private static string contentHubToken = "1988a091087648b7875a4ce826851bdb";
-        private static string _serviceName = "SP-ImgBarnLogosUnProcessed";
+        private static string _serviceName = "SP-ImgBasicF22UnProcessed";
 
         static async Task Main(string[] args)
         {
@@ -123,7 +123,6 @@ namespace ContentHubConsole
                 FileLogger.Log("Program", "Connection is successful.");
 
                 var mClient = clientFactory.Client();
-
 
                 //##################
 
@@ -197,13 +196,13 @@ namespace ContentHubConsole
                 //##################
 
                 var uploadMgr = new UploadManager(mClient, (string)Configuration["Sandboxes:0:Covetrus"], contentHubToken);
-                var directoryPath = PhotographyLogoAssetDetailer.UploadPath;
+                var directoryPath = PhotographyBasicAssetDetailer.UploadPath;
                 await uploadMgr.UploadLocalDirectory(directoryPath, SearchOption.AllDirectories);
                 await uploadMgr.UploadLargeFileLocalDirectory();
 
                 //var uploads = await GetMissingFiles(mClient);
 
-                var gpm = new PhotographyLogoAssetDetailer(mClient, uploadMgr.DirectoryFileUploadResponses);
+                var gpm = new PhotographyBasicAssetDetailer(mClient, uploadMgr.DirectoryFileUploadResponses);
                 await gpm.UpdateAllAssets();
                 await gpm.SaveAllAssets();
 
@@ -217,7 +216,7 @@ namespace ContentHubConsole
                         failedFiles.Add(uploadFailedFile);
                     }
 
-                    var gpmRetry = new PhotographyLogoAssetDetailer(mClient, failedFiles);
+                    var gpmRetry = new PhotographyBasicAssetDetailer(mClient, failedFiles);
                     await gpmRetry.UpdateAllAssets();
                     await gpmRetry.SaveAllAssets();
 

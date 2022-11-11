@@ -15,5 +15,6 @@ namespace ContentHubConsole.ContentHubClients
         public static readonly string RELATION_YEAR_TOASSET = "YearToAsset";
         public static readonly string RELATION_MONTH_TOASSET = "MonthToAsset";
         public static readonly string RELATION_WEEK_TOASSET = "WeekToAsset";
+        public static readonly string RELATION_SEASON_TOASSET = "SeasonToAsset";
     }
 }

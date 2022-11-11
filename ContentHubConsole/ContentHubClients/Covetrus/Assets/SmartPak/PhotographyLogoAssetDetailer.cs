@@ -21,10 +21,10 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Assets.SmartPak
             var results = new List<long>();
 
             await _taxonomyManager.LoadAllTaxonomies();
-            long spDesignBusinessDomainId = _taxonomyManager.BusinessDomainEntities.Where(w => w.Identifier.Equals("Business.Domain.SmartPak.Photography")).FirstOrDefault().Id.Value;
+            long spPhotoBusinessDomainId = _taxonomyManager.BusinessDomainEntities.Where(w => w.Identifier.Equals("Business.Domain.SmartPak.Photography")).FirstOrDefault().Id.Value;
             long dropboxId = _taxonomyManager.MigrationOriginEntities.Where(w => w.Identifier.Contains("Dropbox")).FirstOrDefault().Id.Value;
-            long designId = _taxonomyManager.AssetTypeEntities.Where(w => w.Identifier.Equals("M.AssetType.Logo")).FirstOrDefault().Id.Value;
-            long designUsageIds = _taxonomyManager.AssetUsageEntities.Where(w => w.Identifier.Equals("CV.AssetUsage.Logo")).FirstOrDefault().Id.Value;
+            long logoId = _taxonomyManager.AssetTypeEntities.Where(w => w.Identifier.Equals("M.AssetType.Logo")).FirstOrDefault().Id.Value;
+            long logoUsageIds = _taxonomyManager.AssetUsageEntities.Where(w => w.Identifier.Equals("CV.AssetUsage.Logo")).FirstOrDefault().Id.Value;
 
             foreach (var asset in _covetrusAsset)
             {
@@ -33,10 +33,10 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Assets.SmartPak
                     await asset.LoadAssetMembers();
                     asset.SetMigrationOriginPath(RemoveLocalPathPart(asset.OriginPath));
                     await asset.UpdateDescription(GetDescriptionFromOriginPath(asset.OriginPath));
-                    asset.AddChildToManyParentsRelation(spDesignBusinessDomainId, CovetrusRelationNames.RELATION_BUSINESSDOMAIN_TOASSET);
+                    asset.AddChildToManyParentsRelation(spPhotoBusinessDomainId, CovetrusRelationNames.RELATION_BUSINESSDOMAIN_TOASSET);
                     asset.SetChildToOneParentRelation(dropboxId, CovetrusRelationNames.RELATION_MIGRATIONORIGIN_TOASSET);
-                    asset.SetChildToOneParentRelation(designId, RelationNames.RELATION_ASSETTYPE_TOASSET);
-                    asset.AddChildToManyParentsRelation(designUsageIds, RelationNames.RELATION_ASSETUSAGE_TOASSET);
+                    asset.SetChildToOneParentRelation(logoId, RelationNames.RELATION_ASSETTYPE_TOASSET);
+                    asset.AddChildToManyParentsRelation(logoUsageIds, RelationNames.RELATION_ASSETUSAGE_TOASSET);
 
                     SetStockImages(asset);
                     SetProductUsage(asset);

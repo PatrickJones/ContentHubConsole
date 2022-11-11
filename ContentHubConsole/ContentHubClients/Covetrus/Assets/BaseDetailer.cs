@@ -97,16 +97,11 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Assets
 
         internal void SetSeason(CovetrusAsset asset)
         {
-            if (asset.OriginPath.Contains("homepage", StringComparison.InvariantCultureIgnoreCase))
-            {
-                List<long> usageIds = _taxonomyManager.AssetUsageEntities
-                .Where(w => w.Identifier.Contains("webpage", StringComparison.InvariantCultureIgnoreCase))
-                .Select(s => s.Id.Value).ToList();
+            long seasonId = GetSeasonIdFromPath(asset.OriginPath);
 
-                foreach (var usage in usageIds)
-                {
-                    asset.AddChildToManyParentsRelation(usage, RelationNames.RELATION_ASSETUSAGE_TOASSET);
-                }
+            if (seasonId != 0)
+            {
+                asset.AddChildToManyParentsRelation(seasonId, CovetrusRelationNames.RELATION_SEASON_TOASSET);
             }
         }
 
@@ -531,7 +526,7 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Assets
                 return season.Id.Value;
             }
 
-            if (pathSplit.Any(a => a.Contains("fall", StringComparison.InvariantCultureIgnoreCase)))
+            if (pathSplit.Any(a => a.Contains("fall", StringComparison.InvariantCultureIgnoreCase)) || pathSplit.Any(a => a.Contains("F22", StringComparison.InvariantCultureIgnoreCase)))
             {
                 var season = _taxonomyManager.SeasonEntities.Where(w => w.Identifier.Contains("fall", StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
                 return season.Id.Value;
