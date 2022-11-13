@@ -10,7 +10,7 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Assets.SmartPak
 {
     public class PhotographyBasicAssetDetailer : BaseDetailer
     {
-        public static readonly string UploadPath = @"C:\Users\ptjhi\Dropbox (Covetrus)\Consumer Creative\SmartPak\IMAGES\F22";
+        public static readonly string UploadPath = @"C:\Users\ptjhi\Dropbox (Covetrus)\Consumer Creative\SmartPak\IMAGES\Lifestyle";
 
         public PhotographyBasicAssetDetailer(IWebMClient webMClient, ICollection<FileUploadResponse> fileUploadResponses) : base(webMClient, fileUploadResponses)
         {
@@ -99,6 +99,16 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Assets.SmartPak
                     asset.AddChildToManyParentsRelation(tagId, RelationNames.RELATION_TAG_TOASSET);
                 }
             }
+
+            if (asset.OriginPath.Split('\\').Any(a => a.Equals("Lifestyle", StringComparison.InvariantCultureIgnoreCase)))
+            {
+                var tag = asset.OriginPath.Split('\\').Skip(8).Take(1).FirstOrDefault();
+                var tagId = await _taxonomyManager.AddTagValue(tag.Replace('_', ' '));
+                if (tagId != 0)
+                {
+                    asset.AddChildToManyParentsRelation(tagId, RelationNames.RELATION_TAG_TOASSET);
+                }
+            }
         }
 
         private async Task AddBrandFromPath(CovetrusAsset asset)
@@ -140,6 +150,12 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Assets.SmartPak
         private void UpdateAssetType(CovetrusAsset asset)
         {
             var pathDirectoryCount = asset.OriginPath.Split('\\').Count();
+
+            if (asset.OriginPath.Split('\\').Any(a => a.Equals("Lifestyle", StringComparison.InvariantCultureIgnoreCase)))
+            {
+                var assetId = _taxonomyManager.AssetTypeEntities.Where(w => w.Identifier.Equals("M.AssetType.Lifestyle")).FirstOrDefault().Id.Value;
+                asset.SetChildToOneParentRelation(assetId, RelationNames.RELATION_ASSETTYPE_TOASSET);
+            }
 
             if (asset.OriginPath.Split('\\').Any(a => a.Equals("Labels", StringComparison.InvariantCultureIgnoreCase)))
             {

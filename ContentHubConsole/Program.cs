@@ -250,13 +250,13 @@ namespace ContentHubConsole
         public static async Task DefaultExecution(IWebMClient mClient)
         {
             var uploadMgr = new UploadManager(mClient, (string)Configuration["Sandboxes:0:Covetrus"], contentHubToken);
-            var directoryPath = PhotographyLogoAssetDetailer.UploadPath;
+            var directoryPath = PhotographyBasicAssetDetailer.UploadPath;
             await uploadMgr.UploadLocalDirectory(directoryPath, SearchOption.AllDirectories);
             await uploadMgr.UploadLargeFileLocalDirectory();
 
             //var uploads = await GetMissingFiles(mClient);
 
-            var gpm = new PhotographyLogoAssetDetailer(mClient, uploadMgr.DirectoryFileUploadResponses);
+            var gpm = new PhotographyBasicAssetDetailer(mClient, uploadMgr.DirectoryFileUploadResponses);
             await gpm.UpdateAllAssets();
             await gpm.SaveAllAssets();
 
@@ -270,7 +270,7 @@ namespace ContentHubConsole
                     failedFiles.Add(uploadFailedFile);
                 }
 
-                var gpmRetry = new PhotographyLogoAssetDetailer(mClient, failedFiles);
+                var gpmRetry = new PhotographyBasicAssetDetailer(mClient, failedFiles);
                 await gpmRetry.UpdateAllAssets();
                 await gpmRetry.SaveAllAssets();
 
