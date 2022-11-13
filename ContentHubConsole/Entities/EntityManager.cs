@@ -141,5 +141,40 @@ namespace ContentHubConsole.Entities
 
             return fileUploadResponses;
         }
+
+        public async Task RemoveAssets(bool delete = false)
+        {
+            try
+            {
+                var query = Query.CreateQuery(entities =>
+                 (from e in entities
+                  where e.DefinitionName == "M.Asset" && e.Property("OriginPath").Contains("SmartPak") && e.Property("OriginPath").Contains("Logo_Art")
+                  select e).Skip(0).Take(3000));
+
+                var mq = await _webMClient.Querying.QueryAsync(query);
+
+                if (mq.Items.Any())
+                {
+                    Console.WriteLine($"Found: {mq.Items.Count}");
+                    foreach (var item in mq.Items.ToList())
+                    {
+                        var path = item.GetPropertyValue<string>("OriginPath");
+                        if (delete)
+                        {
+                            Console.WriteLine($"Deleting: {path}");
+                            await _webMClient.Entities.DeleteAsync(item.Id.Value);
+                        }
+                        else
+                        {
+                            Console.WriteLine($"C:\\Users\\ptjhi{path}");
+                        }
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error: {e.Message}");
+            }
+        }
     }
 }

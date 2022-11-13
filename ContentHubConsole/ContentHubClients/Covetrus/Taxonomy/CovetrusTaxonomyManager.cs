@@ -68,8 +68,9 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Taxonomy
 
         public async Task<long> AddManufacturerValue(string manufacturerValue)
         {
+            List<char> charsToRemove = new List<char>() { '@', ' ', ',', '\'', '(', ')', '`', '~' };
             var tagLower = manufacturerValue;
-            var tagValueTrimmed = CondenseValue(tagLower, false);
+            var tagValueTrimmed = CondenseValue(tagLower, charsToRemove, false);
             try
             {
                 var query = Query.CreateQuery(entities =>

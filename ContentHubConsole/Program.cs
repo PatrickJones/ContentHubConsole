@@ -53,6 +53,7 @@ using ContentHubConsole.ContentHubClients.Covetrus.Assets.SmartPak;
 using static Stylelabs.M.Sdk.Errors;
 using System.Net;
 using Stylelabs.M.Sdk.Models.Base;
+using static Stylelabs.M.Sdk.WebClient.WebClientErrors;
 
 namespace ContentHubConsole
 {
@@ -63,7 +64,7 @@ namespace ContentHubConsole
         static IConfigurationRefresher _refresher;
 
         private static string contentHubToken = "1988a091087648b7875a4ce826851bdb";
-        private static string _serviceName = "SP-ImgBasicF22UnProcessed";
+        private static string _serviceName = "SP-ImgLogoArtUnProcessed";
 
         static async Task Main(string[] args)
         {
@@ -124,11 +125,13 @@ namespace ContentHubConsole
 
                 var mClient = clientFactory.Client();
 
+                await DefaultExecution(mClient);
+
                 //##################
 
                 //var em = new EntityManager(mClient);
                 //var mig = await em.GetMigratedAssetsWithNoType();
-
+                //await em.RemoveAssets();
                 //##################
 
 
@@ -195,46 +198,7 @@ namespace ContentHubConsole
 
                 //##################
 
-                var uploadMgr = new UploadManager(mClient, (string)Configuration["Sandboxes:0:Covetrus"], contentHubToken);
-                var directoryPath = StockImageAssetDetailer.UploadPath;
-                await uploadMgr.UploadLocalDirectory(directoryPath, SearchOption.AllDirectories);
-                await uploadMgr.UploadLargeFileLocalDirectory();
 
-                //var uploads = await GetMissingFiles(mClient);
-
-                var gpm = new StockImageAssetDetailer(mClient, uploadMgr.DirectoryFileUploadResponses);
-                await gpm.UpdateAllAssets();
-                await gpm.SaveAllAssets();
-
-                if (gpm._failedAssets.Any())
-                {
-                    FileLogger.Log("Program", $"Failed Assets:");
-                    ICollection<FileUploadResponse> failedFiles = new List<FileUploadResponse>();
-                    foreach (var ff in gpm._failedAssets)
-                    {
-                        var uploadFailedFile = await uploadMgr.UploadLocalFile(ff.OriginPath);
-                        failedFiles.Add(uploadFailedFile);
-                    }
-
-                    var gpmRetry = new StockImageAssetDetailer(mClient, failedFiles);
-                    await gpmRetry.UpdateAllAssets();
-                    await gpmRetry.SaveAllAssets();
-
-                    var ffc = $"Failed files count: {gpmRetry._failedAssets.Count}";
-                    Console.WriteLine(ffc);
-                    FileLogger.Log("Program", ffc);
-
-                    foreach (var failed in gpmRetry._failedAssets)
-                    {
-                        var fp = $"{failed.OriginPath}";
-                        Console.WriteLine(fp);
-                        FileLogger.Log("Program", fp);
-                        FileLogger.AddToFailedUploadLog(failed.OriginPath);
-                    }
-                }
-
-                Console.WriteLine($"Completed {gpm._covetrusAsset.Count}");
-                FileLogger.Log("Program", $"Completed {gpm._covetrusAsset.Count}");
 
                 //##################
 
@@ -281,6 +245,50 @@ namespace ContentHubConsole
 
             //StopWindowsService();
 
+        }
+
+        public static async Task DefaultExecution(IWebMClient mClient)
+        {
+            var uploadMgr = new UploadManager(mClient, (string)Configuration["Sandboxes:0:Covetrus"], contentHubToken);
+            var directoryPath = PhotographyLogoAssetDetailer.UploadPath;
+            await uploadMgr.UploadLocalDirectory(directoryPath, SearchOption.AllDirectories);
+            await uploadMgr.UploadLargeFileLocalDirectory();
+
+            //var uploads = await GetMissingFiles(mClient);
+
+            var gpm = new PhotographyLogoAssetDetailer(mClient, uploadMgr.DirectoryFileUploadResponses);
+            await gpm.UpdateAllAssets();
+            await gpm.SaveAllAssets();
+
+            if (gpm._failedAssets.Any())
+            {
+                FileLogger.Log("Program", $"Failed Assets:");
+                ICollection<FileUploadResponse> failedFiles = new List<FileUploadResponse>();
+                foreach (var ff in gpm._failedAssets)
+                {
+                    var uploadFailedFile = await uploadMgr.UploadLocalFile(ff.OriginPath);
+                    failedFiles.Add(uploadFailedFile);
+                }
+
+                var gpmRetry = new PhotographyLogoAssetDetailer(mClient, failedFiles);
+                await gpmRetry.UpdateAllAssets();
+                await gpmRetry.SaveAllAssets();
+
+                var ffc = $"Failed files count: {gpmRetry._failedAssets.Count}";
+                Console.WriteLine(ffc);
+                FileLogger.Log("Program", ffc);
+
+                foreach (var failed in gpmRetry._failedAssets)
+                {
+                    var fp = $"{failed.OriginPath}";
+                    Console.WriteLine(fp);
+                    FileLogger.Log("Program", fp);
+                    FileLogger.AddToFailedUploadLog(failed.OriginPath);
+                }
+            }
+
+            Console.WriteLine($"Completed {gpm._covetrusAsset.Count}");
+            FileLogger.Log("Program", $"Completed {gpm._covetrusAsset.Count}");
         }
 
         private static async Task<List<FileUploadResponse>> GetMissingFiles(IWebMClient mClient)

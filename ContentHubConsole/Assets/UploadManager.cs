@@ -1,4 +1,6 @@
 ﻿using Azure;
+using Stylelabs.M.Base.Querying;
+using Stylelabs.M.Base.Querying.Linq;
 using Stylelabs.M.Sdk.WebClient;
 using Stylelabs.M.Sdk.WebClient.Models.Upload;
 using System;
@@ -114,7 +116,8 @@ namespace ContentHubConsole.Assets
             {
                 var uploadTasks = new List<Task>();
 
-                var files = Directory.GetFiles(directoryPath, "*.*", searchOption);
+                //List<string> existingFiles = await GetExistingUploads();
+                var files = Directory.GetFiles(directoryPath, "*.*", searchOption);//.Except(existingFiles).ToList();
                 Console.WriteLine($"Total files from directory: {files.Count()}");
                 FileLogger.Log("UploadLocalDirectory", $"Total files from directory: {files.Count()}");
                 foreach (var file in files)
@@ -162,6 +165,36 @@ namespace ContentHubConsole.Assets
                 Console.WriteLine(ex.Message);
                 FileLogger.Log("UploadLocalDirectory", ex.Message);
             }
+        }
+
+        private async Task<List<string>> GetExistingUploads()
+        {
+            var results = new List<string>();
+            try
+            {
+                var query = Query.CreateQuery(entities =>
+                 (from e in entities
+                  where e.DefinitionName == "M.Asset" && e.Property("OriginPath").Contains("SmartPak") && e.Property("OriginPath").Contains("Logo_Art")
+                  select e).Skip(0).Take(3000));
+
+                var mq = await _webMClient.Querying.QueryAsync(query);
+
+                if (mq.Items.Any())
+                {
+                    Console.WriteLine($"Found: {mq.Items.Count}");
+                    foreach (var item in mq.Items.ToList())
+                    {
+                        var path = item.GetPropertyValue<string>("OriginPath");
+                        results.Add($"C:\\Users\\ptjhi{path}");
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error: {e.Message}");
+            }
+
+            return results;
         }
 
         public async Task UploadLargeFileLocalDirectory()

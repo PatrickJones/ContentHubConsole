@@ -11,6 +11,7 @@ namespace ContentHubConsole.ContentHubClients
         public static readonly string RELATION_BUSINESSDOMAIN_TOASSET = "BusinessDomainToAsset";
         public static readonly string RELATION_MIGRATIONORIGIN_TOASSET = "MigrationOriginToAsset";
         public static readonly string RELATION_PRACTICE_TOASSET = "PracticeToAsset";
+        public static readonly string RELATION_MANUFACTURER_TOASSET = "ManufacturerToAsset";
         public static readonly string RELATION_PRACTICETYPE_TOASSET = "PracticeTypeToAsset";
         public static readonly string RELATION_YEAR_TOASSET = "YearToAsset";
         public static readonly string RELATION_MONTH_TOASSET = "MonthToAsset";

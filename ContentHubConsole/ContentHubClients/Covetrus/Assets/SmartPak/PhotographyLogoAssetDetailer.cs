@@ -10,7 +10,7 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Assets.SmartPak
 {
     public class PhotographyLogoAssetDetailer : BaseDetailer
     {
-        public static readonly string UploadPath = @"C:\Users\ptjhi\Dropbox (Covetrus)\Consumer Creative\SmartPak\IMAGES\Barn Logos";
+        public static readonly string UploadPath = @"C:\Users\ptjhi\Dropbox (Covetrus)\Consumer Creative\SmartPak\IMAGES\Logo_Art\";
 
         public PhotographyLogoAssetDetailer(IWebMClient webMClient, ICollection<FileUploadResponse> fileUploadResponses) : base(webMClient, fileUploadResponses)
         {
@@ -40,12 +40,12 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Assets.SmartPak
 
                     SetStockImages(asset);
                     SetProductUsage(asset);
-                    SetOffsite(asset);
+                    //SetOffsite(asset);
                     //SetOnsite(asset);
                     //SetWebpage(asset);
                     SetSeason(asset);
                     //SetAdvertising(asset);
-                    //await AddBrandFromPath(asset);
+                    await AddManufacturerFromPath(asset);
 
                     SetYear(asset);
                     SetSpecificYear(asset);
@@ -121,15 +121,16 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Assets.SmartPak
             }
         }
 
-        private async Task AddBrandFromPath(CovetrusAsset asset)
+        private async Task AddManufacturerFromPath(CovetrusAsset asset)
         {
-            if (asset.OriginPath.Split('\\').Any(a => a.Equals("Brands", StringComparison.InvariantCultureIgnoreCase)))
+            if (asset.OriginPath.Split('\\').Any(a => a.Equals("Logo_Art", StringComparison.InvariantCultureIgnoreCase)) 
+                || asset.OriginPath.Split('\\').Any(a => a.Equals("Logos", StringComparison.InvariantCultureIgnoreCase)))
             {
                 var tag = asset.OriginPath.Split('\\').Skip(8).Take(1).FirstOrDefault();
-                var tagId = await _taxonomyManager.AddBrandValue(tag);
+                var tagId = await _taxonomyManager.AddManufacturerValue(tag);
                 if (tagId != 0)
                 {
-                    asset.AddChildToManyParentsRelation(tagId, RelationNames.RELATION_BRAND_TOASSET);
+                    asset.SetChildToOneParentRelation(tagId, CovetrusRelationNames.RELATION_MANUFACTURER_TOASSET);
                 }
             }
         }

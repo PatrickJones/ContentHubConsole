@@ -154,6 +154,12 @@ namespace ContentHubConsole.Taxonomies
             return allLower ? result.ToLower() : result;
         }
 
+        internal string CondenseValue(string tagValue, List<char> charsToRemove, bool allLower = true)
+        {
+            var result = tagValue.Filter(charsToRemove);
+            return allLower ? result.ToLower() : result;
+        }
+
         private async Task LoadProductStatus(int skip = 0, int take = 100)
         {
             if (!ProductStatusEntities.Any())
