@@ -10,7 +10,7 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Assets.SmartPak
 {
     public class PhotographyLogoAssetDetailer : BaseDetailer
     {
-        public static readonly string UploadPath = @"C:\Users\ptjhi\Dropbox (Covetrus)\Consumer Creative\SmartPak\IMAGES\Logo_Art\";
+        public static readonly string UploadPath = @"C:\Users\ptjhi\Dropbox (Covetrus)\Consumer Creative\SmartPak\IMAGES\Logos\";
 
         public PhotographyLogoAssetDetailer(IWebMClient webMClient, ICollection<FileUploadResponse> fileUploadResponses) : base(webMClient, fileUploadResponses)
         {

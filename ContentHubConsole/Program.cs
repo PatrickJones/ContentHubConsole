@@ -64,7 +64,7 @@ namespace ContentHubConsole
         static IConfigurationRefresher _refresher;
 
         private static string contentHubToken = "1988a091087648b7875a4ce826851bdb";
-        private static string _serviceName = "SP-ImgLogoArtUnProcessed";
+        private static string _serviceName = "SP-ImgLifestyleUnProcessed";
 
         static async Task Main(string[] args)
         {

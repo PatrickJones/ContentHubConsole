@@ -174,8 +174,8 @@ namespace ContentHubConsole.Assets
             {
                 var query = Query.CreateQuery(entities =>
                  (from e in entities
-                  where e.DefinitionName == "M.Asset" && e.Property("OriginPath").Contains("SmartPak") && e.Property("OriginPath").Contains("Logo_Art")
-                  select e).Skip(0).Take(3000));
+                  where e.DefinitionName == "M.Asset" && e.Property("OriginPath").Contains("SmartPak") && e.Property("OriginPath").Contains("Logos")
+                  select e).Skip(0).Take(5000));
 
                 var mq = await _webMClient.Querying.QueryAsync(query);
 
