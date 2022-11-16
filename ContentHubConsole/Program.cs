@@ -68,6 +68,7 @@ namespace ContentHubConsole
 
         public static string FileLoggerLocation = String.Empty;
         public static string OriginFolder = String.Empty;
+        public static bool TestMode = false;
 
         static async Task Main(string[] args)
         {
@@ -93,8 +94,10 @@ namespace ContentHubConsole
             });
 
             Configuration = builder.Build();
-            OriginFolder = Configuration["OriginFolder"];
-            FileLoggerLocation = Configuration["FileLoggerPath"];
+            bool isVM = Boolean.Parse(Configuration["IsVirtualMachine"]);
+            TestMode = Boolean.Parse(Configuration["TestMode"]);
+            OriginFolder = isVM ? Configuration["OriginFolderVM"] : Configuration["OriginFolder"];
+            FileLoggerLocation = isVM ? Configuration["FileLoggerPathVM"] : Configuration["FileLoggerPath"];
             _contentHubToken = Configuration["ContentHubToken"];
             _serviceName = Configuration["ServiceName"];
 
