@@ -10,7 +10,7 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Assets.SmartPak
 {
     public class DesignYearlyAssetDetailer : BaseDetailer
     {
-        public static readonly string UploadPath = @"C:\Users\ptjhi\Dropbox (Covetrus)\Consumer Creative\SmartPak\DESIGN\2021";
+        //public static readonly string UploadPath = @"C:\Users\ptjhi\Dropbox (Covetrus)\Consumer Creative\SmartPak\DESIGN\2021";
 
         public DesignYearlyAssetDetailer(IWebMClient webMClient, ICollection<FileUploadResponse> fileUploadResponses) : base(webMClient, fileUploadResponses)
         {

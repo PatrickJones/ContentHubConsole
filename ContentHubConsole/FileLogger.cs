@@ -29,15 +29,12 @@ namespace ContentHubConsole
 
         public static void AddToFailedUploadLog(string filePath)
         {
-            //string location = @"E:\Users\ptjhi\Documents\Xcentium\Covetrus\Data Migration\AdobeFilesPausedForUpload.txt";
-            string location = @"E:\Data Migration\AdobeFilesPausedForUpload.txt"; //Azure
-
             var existingPaths = new List<string>();
 
             StreamReader reader = null;
-            if (File.Exists(location))
+            if (File.Exists(Program.FileLoggerLocation))
             {
-                reader = new StreamReader(File.OpenRead(location));
+                reader = new StreamReader(File.OpenRead(Program.FileLoggerLocation));
                 while (!reader.EndOfStream)
                 {
                     var line = reader.ReadLine();
@@ -54,7 +51,7 @@ namespace ContentHubConsole
 
             if (!existingPaths.Any(a => a.Equals(filePath)))
             {
-                using StreamWriter file = new(location, append: true);
+                using StreamWriter file = new(Program.FileLoggerLocation, append: true);
                 file.WriteLine(filePath);
             }
         }

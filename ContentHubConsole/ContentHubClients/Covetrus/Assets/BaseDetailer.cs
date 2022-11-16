@@ -23,6 +23,8 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Assets
         internal ICollection<CovetrusAsset> _covetrusAsset = new List<CovetrusAsset>();
         internal ICollection<CovetrusAsset> _failedAssets = new List<CovetrusAsset>();
 
+        public static readonly string UploadPath = Program.OriginFolder;
+
         public BaseDetailer(IWebMClient webMClient, ICollection<FileUploadResponse> fileUploadResponses)
         {
             _webMClient = webMClient;

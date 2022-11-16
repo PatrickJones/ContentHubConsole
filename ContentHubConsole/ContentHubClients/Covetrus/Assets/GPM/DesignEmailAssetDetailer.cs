@@ -11,7 +11,7 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Assets.GPM
 {
     public class DesignEmailAssetDetailer : BaseDetailer
     {
-        public static readonly string UploadPath = @"C:\Users\ptjhi\Dropbox (Covetrus)\Consumer Creative\GPM\2022\Transactional";
+        //public static readonly string UploadPath = @"C:\Users\ptjhi\Dropbox (Covetrus)\Consumer Creative\GPM\2022\Transactional";
 
         public DesignEmailAssetDetailer(IWebMClient webMClient, ICollection<FileUploadResponse> fileUploadResponses) : base(webMClient, fileUploadResponses)
         {

@@ -63,8 +63,11 @@ namespace ContentHubConsole
         static IConfiguration Configuration { get; set; }
         static IConfigurationRefresher _refresher;
 
-        private static string contentHubToken = "1988a091087648b7875a4ce826851bdb";
-        private static string _serviceName = "SP-ImgLifestyle-AprilRaineUnProcessed";
+        private static string _contentHubToken = String.Empty;
+        private static string _serviceName = String.Empty;
+
+        public static string FileLoggerLocation = String.Empty;
+        public static string OriginFolder = String.Empty;
 
         static async Task Main(string[] args)
         {
@@ -90,6 +93,10 @@ namespace ContentHubConsole
             });
 
             Configuration = builder.Build();
+            OriginFolder = Configuration["OriginFolder"];
+            FileLoggerLocation = Configuration["FileLoggerPath"];
+            _contentHubToken = Configuration["ContentHubToken"];
+            _serviceName = Configuration["ServiceName"];
 
             CreateLogFile();
 
@@ -125,9 +132,9 @@ namespace ContentHubConsole
 
                 var mClient = clientFactory.Client();
 
-                //await DefaultExecution(mClient);
+                await DefaultExecution(mClient);
                 //await MigratedAssetsWithNoTypeExecution(mClient);
-                await MissingFileExecution(mClient);
+                //await MissingFileExecution(mClient);
                 //await ReloadAssetsWithZeroFileSizeExecution(mClient);
 
                 //##################
@@ -243,12 +250,10 @@ namespace ContentHubConsole
 
         public static async Task DefaultExecution(IWebMClient mClient)
         {
-            var uploadMgr = new UploadManager(mClient, (string)Configuration["Sandboxes:0:Covetrus"], contentHubToken);
+            var uploadMgr = new UploadManager(mClient, (string)Configuration["Sandboxes:0:Covetrus"], _contentHubToken);
             var directoryPath = PhotographyBasicAssetDetailer.UploadPath;
             await uploadMgr.UploadLocalDirectory(directoryPath, SearchOption.AllDirectories);
             await uploadMgr.UploadLargeFileLocalDirectory();
-
-            //var uploads = await GetMissingFiles(mClient);
 
             var gpm = new PhotographyBasicAssetDetailer(mClient, uploadMgr.DirectoryFileUploadResponses);
             await gpm.UpdateAllAssets();
@@ -287,7 +292,7 @@ namespace ContentHubConsole
 
         public static async Task MissingFileExecution(IWebMClient mClient)
         {
-            var uploadMgr = new UploadManager(mClient, (string)Configuration["Sandboxes:0:Covetrus"], contentHubToken);
+            var uploadMgr = new UploadManager(mClient, (string)Configuration["Sandboxes:0:Covetrus"], _contentHubToken);
 
             var uploads = await GetMissingFiles(mClient);
 
@@ -329,7 +334,7 @@ namespace ContentHubConsole
 
         public static async Task ReloadAssetsWithZeroFileSizeExecution(IWebMClient mClient)
         {
-            var uploadMgr = new UploadManager(mClient, (string)Configuration["Sandboxes:0:Covetrus"], contentHubToken);
+            var uploadMgr = new UploadManager(mClient, (string)Configuration["Sandboxes:0:Covetrus"], _contentHubToken);
             //var directoryPath = PhotographyBasicAssetDetailer.UploadPath;
             var uploads = await GetZeroFiles(mClient);
             await uploadMgr.UploadLocalDirectoryVersions(uploads);
@@ -341,7 +346,7 @@ namespace ContentHubConsole
 
         public static async Task MigratedAssetsWithNoTypeExecution(IWebMClient mClient)
         {
-            var uploadMgr = new UploadManager(mClient, (string)Configuration["Sandboxes:0:Covetrus"], contentHubToken);
+            var uploadMgr = new UploadManager(mClient, (string)Configuration["Sandboxes:0:Covetrus"], _contentHubToken);
             //var directoryPath = PhotographyBasicAssetDetailer.UploadPath;
             //await uploadMgr.UploadLocalDirectory(directoryPath, SearchOption.AllDirectories);
             //await uploadMgr.UploadLargeFileLocalDirectory();
