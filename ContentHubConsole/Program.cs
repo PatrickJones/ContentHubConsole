@@ -64,7 +64,7 @@ namespace ContentHubConsole
         static IConfigurationRefresher _refresher;
 
         private static string contentHubToken = "1988a091087648b7875a4ce826851bdb";
-        private static string _serviceName = "SP-ImgLifestyleUnProcessed";
+        private static string _serviceName = "SP-ImgLifestyle-AprilRaineUnProcessed";
 
         static async Task Main(string[] args)
         {
@@ -125,7 +125,10 @@ namespace ContentHubConsole
 
                 var mClient = clientFactory.Client();
 
-                await DefaultExecution(mClient);
+                //await DefaultExecution(mClient);
+                //await MigratedAssetsWithNoTypeExecution(mClient);
+                await MissingFileExecution(mClient);
+                //await ReloadAssetsWithZeroFileSizeExecution(mClient);
 
                 //##################
 
@@ -198,13 +201,7 @@ namespace ContentHubConsole
 
                 //##################
 
-
-
-                //##################
-
-
-                //var missingList = await GetMissingFiles(mClient);
-
+                              
 
                 //##################
                 //var taxUsage = await mClient.Entities.GetByDefinitionAsync("M.AssetType");
@@ -220,9 +217,6 @@ namespace ContentHubConsole
                 //    var id = await mClient.Entities.SaveAsync(asset);
                 //    Console.WriteLine(id);
                 //}
-
-
-
             }
             catch (NotFoundException ex)
             {
@@ -291,19 +285,138 @@ namespace ContentHubConsole
             FileLogger.Log("Program", $"Completed {gpm._covetrusAsset.Count}");
         }
 
+        public static async Task MissingFileExecution(IWebMClient mClient)
+        {
+            var uploadMgr = new UploadManager(mClient, (string)Configuration["Sandboxes:0:Covetrus"], contentHubToken);
+
+            var uploads = await GetMissingFiles(mClient);
+
+            var gpm = new PhotographyBasicAssetDetailer(mClient, uploads);
+            await gpm.UpdateAllAssets();
+            await gpm.SaveAllAssets();
+
+            if (gpm._failedAssets.Any())
+            {
+                FileLogger.Log("Program", $"Failed Assets:");
+                ICollection<FileUploadResponse> failedFiles = new List<FileUploadResponse>();
+                foreach (var ff in gpm._failedAssets)
+                {
+                    var uploadFailedFile = await uploadMgr.UploadLocalFile(ff.OriginPath);
+                    failedFiles.Add(uploadFailedFile);
+                }
+
+                var gpmRetry = new PhotographyBasicAssetDetailer(mClient, failedFiles);
+                await gpmRetry.UpdateAllAssets();
+                await gpmRetry.SaveAllAssets();
+
+                var ffc = $"Failed files count: {gpmRetry._failedAssets.Count}";
+                Console.WriteLine(ffc);
+                FileLogger.Log("Program", ffc);
+
+                foreach (var failed in gpmRetry._failedAssets)
+                {
+                    var fp = $"{failed.OriginPath}";
+                    Console.WriteLine(fp);
+                    FileLogger.Log("Program", fp);
+                    FileLogger.AddToFailedUploadLog(failed.OriginPath);
+                }
+            }
+
+            Console.WriteLine($"Completed {gpm._covetrusAsset.Count}");
+            FileLogger.Log("Program", $"Completed {gpm._covetrusAsset.Count}");
+        }
+
+
+        public static async Task ReloadAssetsWithZeroFileSizeExecution(IWebMClient mClient)
+        {
+            var uploadMgr = new UploadManager(mClient, (string)Configuration["Sandboxes:0:Covetrus"], contentHubToken);
+            //var directoryPath = PhotographyBasicAssetDetailer.UploadPath;
+            var uploads = await GetZeroFiles(mClient);
+            await uploadMgr.UploadLocalDirectoryVersions(uploads);
+            await uploadMgr.UploadLargeFileLocalDirectoryVersions();
+
+            Console.WriteLine($"Reloading of assets completed {uploads.Count}");
+            FileLogger.Log("Program", $"Reloading of assets completed {uploads.Count}");
+        }
+
+        public static async Task MigratedAssetsWithNoTypeExecution(IWebMClient mClient)
+        {
+            var uploadMgr = new UploadManager(mClient, (string)Configuration["Sandboxes:0:Covetrus"], contentHubToken);
+            //var directoryPath = PhotographyBasicAssetDetailer.UploadPath;
+            //await uploadMgr.UploadLocalDirectory(directoryPath, SearchOption.AllDirectories);
+            //await uploadMgr.UploadLargeFileLocalDirectory();
+
+            var em = new EntityManager(mClient);
+            var mig = await em.GetMigratedAssetsWithNoType();
+
+            var gpm = new PhotographyBasicAssetDetailer(mClient, mig);// uploadMgr.DirectoryFileUploadResponses);
+            await gpm.UpdateAllAssets();
+            await gpm.SaveAllAssets();
+
+            if (gpm._failedAssets.Any())
+            {
+                FileLogger.Log("Program", $"Failed Assets:");
+                ICollection<FileUploadResponse> failedFiles = new List<FileUploadResponse>();
+                foreach (var ff in gpm._failedAssets)
+                {
+                    var uploadFailedFile = await uploadMgr.UploadLocalFile(ff.OriginPath);
+                    failedFiles.Add(uploadFailedFile);
+                }
+
+                var gpmRetry = new PhotographyBasicAssetDetailer(mClient, failedFiles);
+                await gpmRetry.UpdateAllAssets();
+                await gpmRetry.SaveAllAssets();
+
+                var ffc = $"Failed files count: {gpmRetry._failedAssets.Count}";
+                Console.WriteLine(ffc);
+                FileLogger.Log("Program", ffc);
+
+                foreach (var failed in gpmRetry._failedAssets)
+                {
+                    var fp = $"{failed.OriginPath}";
+                    Console.WriteLine(fp);
+                    FileLogger.Log("Program", fp);
+                    FileLogger.AddToFailedUploadLog(failed.OriginPath);
+                }
+            }
+
+            Console.WriteLine($"Completed {gpm._covetrusAsset.Count}");
+            FileLogger.Log("Program", $"Completed {gpm._covetrusAsset.Count}");
+        }
+
+        private static async Task<List<FileUploadResponse>> GetZeroFiles(IWebMClient mClient)
+        {
+            var results = new List<FileUploadResponse>();
+
+            var query = Query.CreateQuery(entities =>
+                 (from e in entities
+                  where e.Property("OriginPath").Contains("SmartPak") && e.Property("OriginPath").Contains("Lifestyle") && e.Property("OriginPath").Contains("April Raine") && e.Property("Filesize") == 0
+                  select e).Skip(0).Take(100)); ;
+            var mq = await mClient.Querying.QueryAsync(query);
+            var items = mq.Items.ToList();
+            var zeroFiles = items.Select(s => new { Id = s.Id.Value, Filename = $@"E:{(string)s.GetPropertyValue("OriginPath")}" }).ToList();
+
+            foreach (var zFfile in zeroFiles)
+            {
+                results.Add(new FileUploadResponse(zFfile.Id, zFfile.Filename));
+            }
+
+            return results;
+        }
+
         private static async Task<List<FileUploadResponse>> GetMissingFiles(IWebMClient mClient)
         {
             Dictionary<string, string> filenames = new Dictionary<string, string>();
 
             var query = Query.CreateQuery(entities =>
                  (from e in entities
-                  where e.Property("OriginPath").Contains("03.22 March") && e.Property("OriginPath").Contains("Week 05")
+                  where e.Property("OriginPath").Contains("SmartPak") && e.Property("OriginPath").Contains("Lifestyle") && e.Property("OriginPath").Contains("April Raine")
                   select e).Skip(0).Take(100));
             var mq = await mClient.Querying.QueryAsync(query);
             var items = mq.Items.ToList();
             var qFilenames = items.Select(s => (string)s.GetPropertyValue("Filename")).ToList();
 
-            var directoryPath = @"C:\Users\ptjhi\Dropbox (Covetrus)\Consumer Creative\GPM\2022\03.22 March\Week 05";
+            var directoryPath = @"E:\Dropbox (Covetrus)\Consumer Creative\SmartPak\IMAGES\Lifestyle\April Raine";
             var files = Directory.GetFiles(directoryPath, "*.*", System.IO.SearchOption.AllDirectories);
             foreach (var file in files)
             {

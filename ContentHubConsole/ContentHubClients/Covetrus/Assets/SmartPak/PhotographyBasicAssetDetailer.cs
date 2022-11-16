@@ -10,7 +10,8 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Assets.SmartPak
 {
     public class PhotographyBasicAssetDetailer : BaseDetailer
     {
-        public static readonly string UploadPath = @"C:\Users\ptjhi\Dropbox (Covetrus)\Consumer Creative\SmartPak\IMAGES\Lifestyle";
+        //public static readonly string UploadPath = @"C:\Users\ptjhi\Dropbox (Covetrus)\Consumer Creative\SmartPak\IMAGES\Lifestyle";
+        public static readonly string UploadPath = @"E:\Dropbox (Covetrus)\Consumer Creative\SmartPak\IMAGES\Lifestyle\April Raine";
 
         public PhotographyBasicAssetDetailer(IWebMClient webMClient, ICollection<FileUploadResponse> fileUploadResponses) : base(webMClient, fileUploadResponses)
         {
@@ -86,6 +87,18 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Assets.SmartPak
                     asset.AddChildToManyParentsRelation(usage, RelationNames.RELATION_ASSETUSAGE_TOASSET);
                 }
             }
+
+            if (asset.OriginPath.Contains("style_guide", StringComparison.InvariantCultureIgnoreCase))
+            {
+                List<long> usageIds = _taxonomyManager.AssetUsageEntities
+                .Where(w => w.Identifier.Contains("StyleGuide"))
+                .Select(s => s.Id.Value).ToList();
+
+                foreach (var usage in usageIds)
+                {
+                    asset.AddChildToManyParentsRelation(usage, RelationNames.RELATION_ASSETUSAGE_TOASSET);
+                }
+            }
         }
 
         private async Task AddTagFromPath(CovetrusAsset asset)
@@ -102,7 +115,7 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Assets.SmartPak
 
             if (asset.OriginPath.Split('\\').Any(a => a.Equals("Lifestyle", StringComparison.InvariantCultureIgnoreCase)))
             {
-                var tag = asset.OriginPath.Split('\\').Skip(8).Take(1).FirstOrDefault();
+                var tag = asset.OriginPath.Split('\\').Skip(6).Take(1).FirstOrDefault();
                 var tagId = await _taxonomyManager.AddTagValue(tag.Replace('_', ' '));
                 if (tagId != 0)
                 {

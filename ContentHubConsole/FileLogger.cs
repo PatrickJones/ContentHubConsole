@@ -29,7 +29,8 @@ namespace ContentHubConsole
 
         public static void AddToFailedUploadLog(string filePath)
         {
-            string location = @"D:\Users\ptjhi\Documents\Xcentium\Covetrus\Data Migration\AdobeFilesPausedForUpload.txt";
+            //string location = @"E:\Users\ptjhi\Documents\Xcentium\Covetrus\Data Migration\AdobeFilesPausedForUpload.txt";
+            string location = @"E:\Data Migration\AdobeFilesPausedForUpload.txt"; //Azure
 
             var existingPaths = new List<string>();
 

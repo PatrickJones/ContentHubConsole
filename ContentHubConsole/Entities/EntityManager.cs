@@ -81,7 +81,7 @@ namespace ContentHubConsole.Entities
                     && e.Parent("AssetTypeToAsset") == null
                     && e.ModifiedByUsername == "patrick.jones@xcentium.com"
                     && e.Property("OriginPath") == String.Empty
-                    && e.ModifiedOn > new DateTime(2022, 11, 8)
+                    && e.ModifiedOn > new DateTime(2022, 11, 11)
                   select e).Skip(0).Take(5000));
                 var mq = await _webMClient.Querying.QueryAsync(query);
 
@@ -98,7 +98,7 @@ namespace ContentHubConsole.Entities
                     {
                         try
                         {
-                            var files = Directory.GetFiles(DesignBasicAssetDetailer.UploadPath, asset.Filename, SearchOption.AllDirectories).Distinct();
+                            var files = Directory.GetFiles(PhotographyBasicAssetDetailer.UploadPath, asset.Filename, SearchOption.AllDirectories).Distinct();
                             if (files.Any() && files.Count() == 1)
                             {
                                 fileUploadResponses.Add(new FileUploadResponse(asset.AsssetId, files.FirstOrDefault()));
@@ -138,7 +138,7 @@ namespace ContentHubConsole.Entities
                 Console.WriteLine(error);
                 FileLogger.Log("AddTagValue", error);
             }
-
+            Console.WriteLine($"Assets getting updated: {fileUploadResponses.Count}");
             return fileUploadResponses;
         }
 

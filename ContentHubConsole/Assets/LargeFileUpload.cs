@@ -103,7 +103,7 @@ namespace ContentHubConsole.Assets
         }
 
 
-        public async Task<LargeUploadResponse> Upload(LargeUploadRequest largeUploadRequest)
+        public async Task<LargeUploadResponse> Upload(LargeUploadRequest largeUploadRequest, long assetId = 0)
         {
             HttpClient client = new HttpClient();
 
@@ -121,7 +121,15 @@ namespace ContentHubConsole.Assets
 
                 Dictionary<int, byte[]> fileChunks = GetFileChunks(data.FileContent);
 
-                var upload = await GetUploadUrl(data.ContentHubHostName, data.Filename, data.FileSize, data.ContentHubToken, data.UploadConfiguration);
+                KeyValuePair<string, HttpContent> upload = new KeyValuePair<string, HttpContent>();
+                if (assetId > 0)
+                {
+                    upload = await GetVersionUploadUrl(data.ContentHubHostName, data.Filename, data.FileSize, data.ContentHubToken, data.UploadConfiguration, assetId);
+                }
+                else
+                {
+                    upload = await GetUploadUrl(data.ContentHubHostName, data.Filename, data.FileSize, data.ContentHubToken, data.UploadConfiguration);
+                }
 
                 foreach (var fileChunk in fileChunks.OrderBy(o => o.Key))
                 {
@@ -206,6 +214,65 @@ namespace ContentHubConsole.Assets
             FileLogger.Log("GetFileChunks", $"File chunking completed: {chunkCounter++} total");
             return fileChunks;
         }
+
+        /// <summary>
+        /// Gets upload URL from Content Hub
+        /// https://docs.stylelabs.com/contenthub/4.1.x/content/integrations/rest-api/upload/upload-api-v2.html#request-an-upload
+        /// </summary>
+        /// <param name="hostUrl">Content Hub instance URL</param>
+        /// <param name="fileName">Filename with extension</param>
+        /// <param name="fileSize">File size</param>
+        /// <param name="token">Content Hub access token</param>
+        /// <param name="uploadConfiguration">Content Hub upload configuration</param>
+        /// <param name="log">Logger</param>
+        /// <returns>KeyValuePair<string, HttpContent></returns>
+        static async Task<KeyValuePair<string, HttpContent>> GetVersionUploadUrl(string hostUrl, string fileName, long fileSize, string token, string uploadConfiguration, long assetId)
+        {
+            Console.WriteLine($"Getting upload url from Content Hub");
+            FileLogger.Log("GetUploadUrl", $"Getting upload url from Content Hub");
+
+            try
+            {
+                HttpClient client = new HttpClient();
+                client.BaseAddress = new Uri(hostUrl);
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue(MIME_TYPE));
+                client.DefaultRequestHeaders.Add(TOKEN_HEADER, token);
+
+                var payload = new
+                {
+                    action = new
+                    {
+                        name = "NewMainFile",
+                        parameters = new { AssetId = assetId }
+                    },
+                    file_name = fileName,
+                    file_size = fileSize.ToString(),
+                    upload_configuration = new
+                    {
+                        name = String.IsNullOrEmpty(uploadConfiguration) ? DEFAULT_UPLOAD_CONFIGURATION : uploadConfiguration,
+                        parameters = new { }
+                    }
+                };
+
+                var jsonPayload = Newtonsoft.Json.JsonConvert.SerializeObject(payload);
+
+                var resp = await client.PostAsync(UPLOAD_ROUTE, new StringContent(jsonPayload, Encoding.UTF8, MIME_TYPE));
+
+                Console.WriteLine($"Getting upload url response: {resp.StatusCode}");
+                FileLogger.Log("GetUploadUrl", $"Getting upload url response: {resp.StatusCode}");
+
+                return resp.IsSuccessStatusCode
+                    ? new KeyValuePair<string, HttpContent>(resp.Headers.GetValues("Location").FirstOrDefault(), resp.Content)
+                    : new KeyValuePair<string, HttpContent>(String.Empty, null);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error getting upload url:\n {ex.Message}");
+                FileLogger.Log("GetUploadUrl", $"Error getting upload url: {ex.Message}");
+                throw;
+            }
+        }
+
 
         /// <summary>
         /// Gets upload URL from Content Hub

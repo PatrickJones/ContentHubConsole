@@ -23,6 +23,7 @@ namespace ContentHubConsole.Assets
         private const string UPLOAD_CONFIGURATION = "ApprovedAssetUploadConfiguration";
 
         List<string> _largeFilePaths = new List<string>();
+        List<FileUploadResponse> _largeFileVersions = new List<FileUploadResponse>();
         public List<FileUploadResponse> DirectoryFileUploadResponses = new List<FileUploadResponse>();
 
         public UploadManager(IWebMClient webMClient)
@@ -74,6 +75,40 @@ namespace ContentHubConsole.Assets
             }
         }
 
+        public async Task<FileUploadResponse> UploadLocalFileVersion(FileUploadResponse fileResp)
+        {
+            try
+            {
+                var fileInfo = new FileInfo(fileResp.LocalPath);
+                byte[] fileBytes = File.ReadAllBytes(fileResp.LocalPath);
+
+                if (fileInfo.Length > MAX_FILE_SIZE_BYTES)
+                {
+                    return await UploadLargeLocalFile(fileResp.LocalPath);
+                }
+
+                var uploadSource = new LocalUploadSource(fileResp.LocalPath, fileInfo.Name);
+                var request = new UploadRequest(uploadSource, UPLOAD_CONFIGURATION, "NewMainFile");
+                request.ActionParameters.Add(new KeyValuePair<string, object>("AssetId", fileResp.AssetId));
+
+                // Initiate upload and wait for its completion.
+                var response = await _webMClient.Uploads.UploadAsync(request).ConfigureAwait(false);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    fileResp.AssetId = 0;
+                }
+
+                return fileResp;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                FileLogger.Log("UploadLocalFile", ex.Message);
+                return fileResp;
+            }
+        }
+
         public async Task<FileUploadResponse> UploadLargeLocalFile(string path)
         {
             var fileUploadResponse = new FileUploadResponse(0, path);
@@ -104,6 +139,38 @@ namespace ContentHubConsole.Assets
                 Console.WriteLine(ex.Message);
                 FileLogger.Log("UploadLargeLocalFile", ex.Message);
                 return fileUploadResponse;
+            }
+        }
+
+        public async Task<FileUploadResponse> UploadLargeLocalFileVersion(FileUploadResponse fileresp)
+        {
+            try
+            {
+                var fileInfo = new FileInfo(fileresp.LocalPath);
+                byte[] fileBytes = File.ReadAllBytes(fileresp.LocalPath);
+
+                var uploadSource = new LocalUploadSource(fileresp.LocalPath, fileInfo.Name);
+                var request = new UploadRequest(uploadSource, UPLOAD_CONFIGURATION, "NewMainFile");
+                request.ActionParameters = new Dictionary<string, object>();
+                request.ActionParameters.Add(new KeyValuePair<string, object>("AssetId", fileresp.AssetId));
+
+                var uploadRequest = new LargeUploadRequest(fileInfo.Name,
+                    GetMediaType(fileInfo.Extension),
+                    fileBytes.LongLength,
+                    fileBytes,
+                    _contentHubUrl,
+                    _contentHubToken,
+                    UPLOAD_CONFIGURATION);
+
+                var largeUpload = new LargeFileUpload();
+                var largeFileResp = await largeUpload.Upload(uploadRequest, fileresp.AssetId);
+                return fileresp;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                FileLogger.Log("UploadLargeLocalFileVersion", ex.Message);
+                return fileresp;
             }
         }
 
@@ -164,6 +231,62 @@ namespace ContentHubConsole.Assets
             {
                 Console.WriteLine(ex.Message);
                 FileLogger.Log("UploadLocalDirectory", ex.Message);
+            }
+        }
+
+        public async Task UploadLocalDirectoryVersions(List<FileUploadResponse> fileUploadResponses)
+        {
+            Console.WriteLine($"Uploading versions - count: {fileUploadResponses.Count}");
+            FileLogger.Log("UploadLocalDirectoryVersions", $"Uploading versions - count: {fileUploadResponses.Count}");
+
+            try
+            {
+                var uploadTasks = new List<Task>();
+
+                foreach (var file in fileUploadResponses)
+                {
+                    try
+                    {
+                        var fileInfo = new FileInfo(file.LocalPath);
+                        if (fileInfo.Length > MAX_FILE_SIZE_BYTES)
+                        {
+                            _largeFileVersions.Add(file);
+                        }
+                        else
+                        {
+                            uploadTasks.Add(UploadLocalFileVersion(file));
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        DirectoryFileUploadResponses.Add(file);
+
+                        Console.WriteLine(ex.Message);
+                        FileLogger.Log("UploadLocalDirectoryVersions", ex.Message);
+                        continue;
+                    }
+                }
+
+                await Task.WhenAll(uploadTasks);
+
+                try
+                {
+                    foreach (var task in uploadTasks)
+                    {
+                        var result = ((Task<FileUploadResponse>)task).Result;
+                        DirectoryFileUploadResponses.Add(result);
+                    }
+                }
+                catch { }
+
+                var log = $"Done uploading file versions";
+                Console.WriteLine(log);
+                FileLogger.Log("UploadLocalDirectoryVersions", log);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                FileLogger.Log("UploadLocalDirectoryVersions", ex.Message);
             }
         }
 
@@ -231,6 +354,43 @@ namespace ContentHubConsole.Assets
             {
                 Console.WriteLine(ex.Message);
                 FileLogger.Log("UploadLargeFileLocalDirectory", ex.Message);
+            }
+        }
+
+        public async Task UploadLargeFileLocalDirectoryVersions()
+        {
+            Console.WriteLine($"Getting Large files from directory.");
+            FileLogger.Log("UploadLargeFileLocalDirectory", "Getting Large files from directory.");
+
+            try
+            {
+                var largeFileUploadTasks = new List<Task>();
+
+                foreach (var file in _largeFileVersions)
+                {
+                    largeFileUploadTasks.Add(UploadLargeLocalFileVersion(file));
+                }
+
+                await Task.WhenAll(largeFileUploadTasks);
+
+                try
+                {
+                    foreach (var task in largeFileUploadTasks)
+                    {
+                        var result = ((Task<FileUploadResponse>)task).Result;
+                        DirectoryFileUploadResponses.Add(result);
+                    }
+                }
+                catch { }
+
+                var log = "Done getting large files from directory.";
+                Console.WriteLine(log);
+                FileLogger.Log("UploadLargeFileLocalDirectoryVersions", log);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                FileLogger.Log("UploadLargeFileLocalDirectoryVersions", ex.Message);
             }
         }
 
