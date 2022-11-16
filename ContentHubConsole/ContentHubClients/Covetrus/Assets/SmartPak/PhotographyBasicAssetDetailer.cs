@@ -21,7 +21,7 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Assets.SmartPak
             await _taxonomyManager.LoadAllTaxonomies();
             long spPhotoBusinessDomainId = _taxonomyManager.BusinessDomainEntities.Where(w => w.Identifier.Equals("Business.Domain.SmartPak.Photography")).FirstOrDefault().Id.Value;
             long dropboxId = _taxonomyManager.MigrationOriginEntities.Where(w => w.Identifier.Contains("Dropbox")).FirstOrDefault().Id.Value;
-            long imageId = _taxonomyManager.AssetTypeEntities.Where(w => w.Identifier.Equals("M.AssetType.ImageAnalysis")).FirstOrDefault().Id.Value;
+            long imageId = _taxonomyManager.AssetTypeEntities.Where(w => w.Identifier.Equals("M.AssetType.Support")).FirstOrDefault().Id.Value;
             long imageUsageIds = _taxonomyManager.AssetUsageEntities.Where(w => w.Identifier.Equals("CV.AssetUsage.Advertising")).FirstOrDefault().Id.Value;
 
             foreach (var asset in _covetrusAsset)
@@ -119,6 +119,16 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Assets.SmartPak
                     asset.AddChildToManyParentsRelation(tagId, RelationNames.RELATION_TAG_TOASSET);
                 }
             }
+
+            if (asset.OriginPath.Split('\\').Any(a => a.Equals("SmartPaks & Supporting", StringComparison.InvariantCultureIgnoreCase)))
+            {
+                var tag = asset.OriginPath.Split('\\').Skip(8).Take(1).FirstOrDefault();
+                var tagId = await _taxonomyManager.AddTagValue(tag.Replace('_', ' '));
+                if (tagId != 0)
+                {
+                    asset.AddChildToManyParentsRelation(tagId, RelationNames.RELATION_TAG_TOASSET);
+                }
+            }
         }
 
         private async Task AddBrandFromPath(CovetrusAsset asset)
@@ -160,6 +170,12 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Assets.SmartPak
         private void UpdateAssetType(CovetrusAsset asset)
         {
             var pathDirectoryCount = asset.OriginPath.Split('\\').Count();
+
+            if (asset.OriginPath.Split('\\').Any(a => a.Equals("Illustrations", StringComparison.InvariantCultureIgnoreCase)))
+            {
+                var assetId = _taxonomyManager.AssetTypeEntities.Where(w => w.Identifier.Equals("M.AssetType.Illustration")).FirstOrDefault().Id.Value;
+                asset.SetChildToOneParentRelation(assetId, RelationNames.RELATION_ASSETTYPE_TOASSET);
+            }
 
             if (asset.OriginPath.Split('\\').Any(a => a.Equals("Lifestyle", StringComparison.InvariantCultureIgnoreCase)))
             {

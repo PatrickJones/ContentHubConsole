@@ -184,7 +184,7 @@ namespace ContentHubConsole.Assets
                 var uploadTasks = new List<Task>();
 
                 //List<string> existingFiles = await GetExistingUploads();
-                var files = Directory.GetFiles(directoryPath, "*.*", searchOption);//.Except(existingFiles).ToList();
+                var files = Program.TestMode ? Directory.GetFiles(directoryPath, "*.*", searchOption).Take(1).ToArray() : Directory.GetFiles(directoryPath, "*.*", searchOption);//.Except(existingFiles).ToList();
                 Console.WriteLine($"Total files from directory: {files.Count()}");
                 FileLogger.Log("UploadLocalDirectory", $"Total files from directory: {files.Count()}");
                 foreach (var file in files)
