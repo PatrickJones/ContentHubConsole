@@ -80,7 +80,7 @@ namespace ContentHubConsole.Entities
                   where e.DefinitionName == "M.Asset"
                     && e.Parent("AssetTypeToAsset") == null
                     && e.ModifiedByUsername == "patrick.jones@xcentium.com"
-                    && e.Property("OriginPath") == String.Empty
+                    && (e.Property("OriginPath") == String.Empty || e.Property("OriginPath").Contains("SmartPaks & Supporting"))
                     && e.ModifiedOn > new DateTime(2022, 11, 11)
                   select e).Skip(0).Take(5000));
                 var mq = await _webMClient.Querying.QueryAsync(query);

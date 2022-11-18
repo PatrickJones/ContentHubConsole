@@ -328,7 +328,7 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Assets
 
         public virtual string RemoveLocalPathPart(string originPath)
         {
-            var pathSplit = originPath.Split('\\').Skip(3).ToArray();
+            var pathSplit = Program.IsVirtualMachine ? originPath.Split('\\').Skip(1).ToArray() : originPath.Split('\\').Skip(3).ToArray();
             var result = new StringBuilder();
 
             for (int i = 0; i < pathSplit.Length; i++)

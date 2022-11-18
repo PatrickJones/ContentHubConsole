@@ -69,6 +69,7 @@ namespace ContentHubConsole
         public static string FileLoggerLocation = String.Empty;
         public static string OriginFolder = String.Empty;
         public static bool TestMode = false;
+        public static bool IsVirtualMachine = false;
 
         static async Task Main(string[] args)
         {
@@ -94,10 +95,10 @@ namespace ContentHubConsole
             });
 
             Configuration = builder.Build();
-            bool isVM = Boolean.Parse(Configuration["IsVirtualMachine"]);
+            IsVirtualMachine = Boolean.Parse(Configuration["IsVirtualMachine"]);
             TestMode = Boolean.Parse(Configuration["TestMode"]);
-            OriginFolder = isVM ? Configuration["OriginFolderVM"] : Configuration["OriginFolder"];
-            FileLoggerLocation = isVM ? Configuration["FileLoggerPathVM"] : Configuration["FileLoggerPath"];
+            OriginFolder = IsVirtualMachine ? Configuration["OriginFolderVM"] : Configuration["OriginFolder"];
+            FileLoggerLocation = IsVirtualMachine ? Configuration["FileLoggerPathVM"] : Configuration["FileLoggerPath"];
             _contentHubToken = Configuration["ContentHubToken"];
             _serviceName = Configuration["ServiceName"];
 
@@ -135,8 +136,8 @@ namespace ContentHubConsole
 
                 var mClient = clientFactory.Client();
 
-                await DefaultExecution(mClient);
-                //await MigratedAssetsWithNoTypeExecution(mClient);
+                //await DefaultExecution(mClient);
+                await MigratedAssetsWithNoTypeExecution(mClient);
                 //await MissingFileExecution(mClient);
                 //await ReloadAssetsWithZeroFileSizeExecution(mClient);
 
@@ -264,7 +265,7 @@ namespace ContentHubConsole
 
             if (gpm._failedAssets.Any())
             {
-                FileLogger.Log("Program", $"Failed Assets:");
+                FileLogger.Log("Program.DefaultExecution", $"Failed Assets:");
                 ICollection<FileUploadResponse> failedFiles = new List<FileUploadResponse>();
                 foreach (var ff in gpm._failedAssets)
                 {
@@ -278,13 +279,13 @@ namespace ContentHubConsole
 
                 var ffc = $"Failed files count: {gpmRetry._failedAssets.Count}";
                 Console.WriteLine(ffc);
-                FileLogger.Log("Program", ffc);
+                FileLogger.Log("Program.DefaultExecution", ffc);
 
                 foreach (var failed in gpmRetry._failedAssets)
                 {
                     var fp = $"{failed.OriginPath}";
                     Console.WriteLine(fp);
-                    FileLogger.Log("Program", fp);
+                    FileLogger.Log("Program.DefaultExecution", fp);
                     FileLogger.AddToFailedUploadLog(failed.OriginPath);
                 }
             }
@@ -297,7 +298,10 @@ namespace ContentHubConsole
         {
             var uploadMgr = new UploadManager(mClient, (string)Configuration["Sandboxes:0:Covetrus"], _contentHubToken);
 
-            var uploads = await GetMissingFiles(mClient);
+            var missing = await GetMissingFiles(mClient);
+            var uploads = TestMode ? missing.Take(1).ToList() : missing;
+            Console.WriteLine($"Missing file count: {uploads.Count}");
+            FileLogger.Log("Program.GetMissingFiles.", $"Missing file count: {uploads.Count}");
 
             var gpm = new PhotographyBasicAssetDetailer(mClient, uploads);
             await gpm.UpdateAllAssets();
@@ -305,7 +309,7 @@ namespace ContentHubConsole
 
             if (gpm._failedAssets.Any())
             {
-                FileLogger.Log("Program", $"Failed Assets:");
+                FileLogger.Log("Program.GetMissingFiles", $"Failed Assets:");
                 ICollection<FileUploadResponse> failedFiles = new List<FileUploadResponse>();
                 foreach (var ff in gpm._failedAssets)
                 {
@@ -319,19 +323,19 @@ namespace ContentHubConsole
 
                 var ffc = $"Failed files count: {gpmRetry._failedAssets.Count}";
                 Console.WriteLine(ffc);
-                FileLogger.Log("Program", ffc);
+                FileLogger.Log("Program.GetMissingFiles", ffc);
 
                 foreach (var failed in gpmRetry._failedAssets)
                 {
                     var fp = $"{failed.OriginPath}";
                     Console.WriteLine(fp);
-                    FileLogger.Log("Program", fp);
+                    FileLogger.Log("Program.GetMissingFiles", fp);
                     FileLogger.AddToFailedUploadLog(failed.OriginPath);
                 }
             }
 
             Console.WriteLine($"Completed {gpm._covetrusAsset.Count}");
-            FileLogger.Log("Program", $"Completed {gpm._covetrusAsset.Count}");
+            FileLogger.Log("Program.GetMissingFiles", $"Completed {gpm._covetrusAsset.Count}");
         }
 
 
@@ -363,7 +367,7 @@ namespace ContentHubConsole
 
             if (gpm._failedAssets.Any())
             {
-                FileLogger.Log("Program", $"Failed Assets:");
+                FileLogger.Log("Program.MigratedAssetsWithNoTypeExecution", $"Failed Assets:");
                 ICollection<FileUploadResponse> failedFiles = new List<FileUploadResponse>();
                 foreach (var ff in gpm._failedAssets)
                 {
@@ -377,19 +381,19 @@ namespace ContentHubConsole
 
                 var ffc = $"Failed files count: {gpmRetry._failedAssets.Count}";
                 Console.WriteLine(ffc);
-                FileLogger.Log("Program", ffc);
+                FileLogger.Log("Program.MigratedAssetsWithNoTypeExecution", ffc);
 
                 foreach (var failed in gpmRetry._failedAssets)
                 {
                     var fp = $"{failed.OriginPath}";
                     Console.WriteLine(fp);
-                    FileLogger.Log("Program", fp);
+                    FileLogger.Log("Program.MigratedAssetsWithNoTypeExecution", fp);
                     FileLogger.AddToFailedUploadLog(failed.OriginPath);
                 }
             }
 
             Console.WriteLine($"Completed {gpm._covetrusAsset.Count}");
-            FileLogger.Log("Program", $"Completed {gpm._covetrusAsset.Count}");
+            FileLogger.Log("Program.MigratedAssetsWithNoTypeExecution", $"Completed {gpm._covetrusAsset.Count}");
         }
 
         private static async Task<List<FileUploadResponse>> GetZeroFiles(IWebMClient mClient)
@@ -398,11 +402,11 @@ namespace ContentHubConsole
 
             var query = Query.CreateQuery(entities =>
                  (from e in entities
-                  where e.Property("OriginPath").Contains("SmartPak") && e.Property("OriginPath").Contains("Lifestyle") && e.Property("OriginPath").Contains("April Raine") && e.Property("Filesize") == 0
-                  select e).Skip(0).Take(100)); ;
+                  where e.Property("OriginPath").Contains("SmartPak") && e.Property("OriginPath").Contains("Lifestyle") && e.Property("OriginPath").Contains("Clipping") && e.Property("Filesize") == 0
+                  select e).Skip(0).Take(1000)); ;
             var mq = await mClient.Querying.QueryAsync(query);
             var items = mq.Items.ToList();
-            var zeroFiles = items.Select(s => new { Id = s.Id.Value, Filename = $@"E:{(string)s.GetPropertyValue("OriginPath")}" }).ToList();
+            var zeroFiles = IsVirtualMachine ? items.Select(s => new { Id = s.Id.Value, Filename = $@"E:{(string)s.GetPropertyValue("OriginPath")}" }).ToList() : items.Select(s => new { Id = s.Id.Value, Filename = $@"C:\Users\ptjhi{(string)s.GetPropertyValue("OriginPath")}" }).ToList();
 
             foreach (var zFfile in zeroFiles)
             {
@@ -418,24 +422,30 @@ namespace ContentHubConsole
 
             var query = Query.CreateQuery(entities =>
                  (from e in entities
-                  where e.Property("OriginPath").Contains("SmartPak") && e.Property("OriginPath").Contains("Lifestyle") && e.Property("OriginPath").Contains("April Raine")
-                  select e).Skip(0).Take(100));
+                  where e.Property("OriginPath").Contains("SmartPak") 
+                    && e.Property("OriginPath").Contains("Lifestyle") 
+                    && e.Property("OriginPath").Contains("Close Ups")
+                  select e).Skip(0).Take(1000));
             var mq = await mClient.Querying.QueryAsync(query);
             var items = mq.Items.ToList();
             var qFilenames = items.Select(s => (string)s.GetPropertyValue("Filename")).ToList();
+            var qOriginPaths = items.Select(s => (string)s.GetPropertyValue("OriginPath")).ToList();
 
-            var directoryPath = @"E:\Dropbox (Covetrus)\Consumer Creative\SmartPak\IMAGES\Lifestyle\April Raine";
+            var directoryPath = OriginFolder;
             var files = Directory.GetFiles(directoryPath, "*.*", System.IO.SearchOption.AllDirectories);
-            foreach (var file in files)
+            foreach (var file in files.Distinct())
             {
                 var fileInfo = new FileInfo(file);
-                filenames.Add(fileInfo.FullName, fileInfo.Name);
+                if (!qFilenames.Any(a => a.Equals(fileInfo.Name, StringComparison.InvariantCultureIgnoreCase)))
+                {
+                    filenames.Add(fileInfo.FullName, fileInfo.Name);
+                }
             }
 
             var results = new List<FileUploadResponse>();
 
             //results.Add(new FileUploadResponse(0, @"C:\Users\ptjhi\Dropbox (Covetrus)\Consumer Creative\GPM\2022\03.22 March\Week 01\Assets\shutterstock_1739907251.psd"));
-            for (int i = 0; i < filenames.Values.Distinct().Except(qFilenames).Count(); i++)
+            for (int i = 0; i < filenames.Values.Count(); i++)
             {
                 if (!results.Any(a => a.LocalPath.Equals(filenames.ElementAt(i).Key)))
                 {

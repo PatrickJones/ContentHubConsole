@@ -21,7 +21,7 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Assets.SmartPak
             await _taxonomyManager.LoadAllTaxonomies();
             long spPhotoBusinessDomainId = _taxonomyManager.BusinessDomainEntities.Where(w => w.Identifier.Equals("Business.Domain.SmartPak.Photography")).FirstOrDefault().Id.Value;
             long dropboxId = _taxonomyManager.MigrationOriginEntities.Where(w => w.Identifier.Contains("Dropbox")).FirstOrDefault().Id.Value;
-            long imageId = _taxonomyManager.AssetTypeEntities.Where(w => w.Identifier.Equals("M.AssetType.Support")).FirstOrDefault().Id.Value;
+            long imageId = _taxonomyManager.AssetTypeEntities.Where(w => w.Identifier.Equals("M.AssetType.Lifestyle")).FirstOrDefault().Id.Value;
             long imageUsageIds = _taxonomyManager.AssetUsageEntities.Where(w => w.Identifier.Equals("CV.AssetUsage.Advertising")).FirstOrDefault().Id.Value;
 
             foreach (var asset in _covetrusAsset)
@@ -112,7 +112,7 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Assets.SmartPak
 
             if (asset.OriginPath.Split('\\').Any(a => a.Equals("Lifestyle", StringComparison.InvariantCultureIgnoreCase)))
             {
-                var tag = asset.OriginPath.Split('\\').Skip(8).Take(1).FirstOrDefault();
+                var tag = Program.IsVirtualMachine ? asset.OriginPath.Split('\\').Skip(6).Take(1).FirstOrDefault() : asset.OriginPath.Split('\\').Skip(8).Take(1).FirstOrDefault();
                 var tagId = await _taxonomyManager.AddTagValue(tag.Replace('_', ' '));
                 if (tagId != 0)
                 {

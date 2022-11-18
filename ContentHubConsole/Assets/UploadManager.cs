@@ -415,12 +415,12 @@ namespace ContentHubConsole.Assets
                 _ when extension.Equals(".rar", StringComparison.InvariantCultureIgnoreCase) => "application/x-rar-compressed",
                 _ when extension.Equals(".gzip", StringComparison.InvariantCultureIgnoreCase) => "application/x-gzip",
                 _ when extension.Equals(".ps1", StringComparison.InvariantCultureIgnoreCase) => "text/plain",
-                //_ when extension.Equals(".psd", StringComparison.InvariantCultureIgnoreCase) => "image/vnd.adobe.photoshop",
+                _ when extension.Equals(".psd", StringComparison.InvariantCultureIgnoreCase) => "image/vnd.adobe.photoshop",
                 _ when extension.Equals(".js", StringComparison.InvariantCultureIgnoreCase) => "text/javascript",
                 _ when extension.Equals(".html", StringComparison.InvariantCultureIgnoreCase) => "text/html",
-                //_ when extension.Equals(".ai", StringComparison.InvariantCultureIgnoreCase) => "application/postscript",
-                //_ when extension.Equals(".eps", StringComparison.InvariantCultureIgnoreCase) => "application/postscript",
-                //_ when extension.Equals(".indd", StringComparison.InvariantCultureIgnoreCase) => " application/x-indesign",
+                _ when extension.Equals(".ai", StringComparison.InvariantCultureIgnoreCase) => "application/postscript",
+                _ when extension.Equals(".eps", StringComparison.InvariantCultureIgnoreCase) => "application/postscript",
+                _ when extension.Equals(".indd", StringComparison.InvariantCultureIgnoreCase) => " application/x-indesign",
                 _ when extension.Equals(".jpf", StringComparison.InvariantCultureIgnoreCase) => "image/x-jpf",
                 _ => throw new NotImplementedException()
             };

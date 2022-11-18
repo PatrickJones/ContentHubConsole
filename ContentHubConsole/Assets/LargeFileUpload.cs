@@ -114,7 +114,7 @@ namespace ContentHubConsole.Assets
 
 
                 LargeUploadRequest data = largeUploadRequest;
-
+                client.Timeout = TimeSpan.FromHours(1);
                 client.BaseAddress = new Uri(data.ContentHubHostName);
                 client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue(MIME_TYPE));
                 client.DefaultRequestHeaders.Add(TOKEN_HEADER, data.ContentHubToken);
@@ -234,6 +234,7 @@ namespace ContentHubConsole.Assets
             try
             {
                 HttpClient client = new HttpClient();
+                client.Timeout = TimeSpan.FromHours(1);
                 client.BaseAddress = new Uri(hostUrl);
                 client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue(MIME_TYPE));
                 client.DefaultRequestHeaders.Add(TOKEN_HEADER, token);
@@ -293,6 +294,7 @@ namespace ContentHubConsole.Assets
             try
             {
                 HttpClient client = new HttpClient();
+                client.Timeout = TimeSpan.FromHours(1);
                 client.BaseAddress = new Uri(hostUrl);
                 client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue(MIME_TYPE));
                 client.DefaultRequestHeaders.Add(TOKEN_HEADER, token);
@@ -347,6 +349,7 @@ namespace ContentHubConsole.Assets
             {
                 LargeUploadResponse largeUploadResponse = new LargeUploadResponse();
                 HttpClient client = new HttpClient();
+                client.Timeout = TimeSpan.FromHours(1);
                 client.BaseAddress = new Uri(hostUrl);
                 client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue(MIME_TYPE));
                 client.DefaultRequestHeaders.Add(TOKEN_HEADER, token);
