@@ -137,7 +137,7 @@ namespace ContentHubConsole
                 var mClient = clientFactory.Client();
 
                 //await DefaultExecution(mClient);
-                await MigratedAssetsWithNoTypeExecution(mClient);
+                await MigratedAssetsWithNoTypeExecution(mClient, false);
                 //await MissingFileExecution(mClient);
                 //await ReloadAssetsWithZeroFileSizeExecution(mClient);
 
@@ -351,7 +351,7 @@ namespace ContentHubConsole
             FileLogger.Log("Program", $"Reloading of assets completed {uploads.Count}");
         }
 
-        public static async Task MigratedAssetsWithNoTypeExecution(IWebMClient mClient)
+        public static async Task MigratedAssetsWithNoTypeExecution(IWebMClient mClient, bool checkOriginPath)
         {
             var uploadMgr = new UploadManager(mClient, (string)Configuration["Sandboxes:0:Covetrus"], _contentHubToken);
             //var directoryPath = PhotographyBasicAssetDetailer.UploadPath;
@@ -359,7 +359,7 @@ namespace ContentHubConsole
             //await uploadMgr.UploadLargeFileLocalDirectory();
 
             var em = new EntityManager(mClient);
-            var mig = await em.GetMigratedAssetsWithNoType();
+            var mig = await em.GetMigratedAssetsWithNoType(checkOriginPath);
 
             var gpm = new PhotographyBasicAssetDetailer(mClient, mig);// uploadMgr.DirectoryFileUploadResponses);
             await gpm.UpdateAllAssets();

@@ -69,20 +69,35 @@ namespace ContentHubConsole.Entities
             }
         }
 
-        public async Task<List<FileUploadResponse>> GetMigratedAssetsWithNoType()
+        public async Task<List<FileUploadResponse>> GetMigratedAssetsWithNoType(bool checkOriginPath)
         {
             var fileUploadResponses = new List<FileUploadResponse>();
+            var dateMin = DateTime.Today; //new DateTime(2022, 11, 11)
+            int skip = 0;
+            var take = 5000;
 
             try
             {
-                var query = Query.CreateQuery(entities =>
+                Query query = Query.CreateQuery(entities =>
                  (from e in entities
                   where e.DefinitionName == "M.Asset"
                     && e.Parent("AssetTypeToAsset") == null
                     && e.ModifiedByUsername == "patrick.jones@xcentium.com"
-                    && (e.Property("OriginPath") == String.Empty || e.Property("OriginPath").Contains("SmartPaks & Supporting"))
-                    && e.ModifiedOn > new DateTime(2022, 11, 11)
-                  select e).Skip(0).Take(5000));
+                    && e.ModifiedOn > dateMin
+                  select e).Skip(skip).Take(take));
+
+                if (checkOriginPath)
+                {
+                    query = Query.CreateQuery(entities =>
+                     (from e in entities
+                      where e.DefinitionName == "M.Asset"
+                        && e.Parent("AssetTypeToAsset") == null
+                        && e.ModifiedByUsername == "patrick.jones@xcentium.com"
+                        && (e.Property("OriginPath") == String.Empty || e.Property("OriginPath").Contains("SmartPaks & Supporting"))
+                        && e.ModifiedOn > dateMin
+                      select e).Skip(skip).Take(take));
+                }
+
                 var mq = await _webMClient.Querying.QueryAsync(query);
 
 
