@@ -136,9 +136,10 @@ namespace ContentHubConsole
 
                 var mClient = clientFactory.Client();
 
+                //await GetTotalMigratedFromPath(mClient);
                 //await DefaultExecution(mClient);
-                await MigratedAssetsWithNoTypeExecution(mClient, false);
-                //await MissingFileExecution(mClient);
+                //await MigratedAssetsWithNoTypeExecution(mClient, false);
+                await MissingFileExecution(mClient);
                 //await ReloadAssetsWithZeroFileSizeExecution(mClient);
 
                 //##################
@@ -212,7 +213,7 @@ namespace ContentHubConsole
 
                 //##################
 
-                              
+
 
                 //##################
                 //var taxUsage = await mClient.Entities.GetByDefinitionAsync("M.AssetType");
@@ -250,6 +251,30 @@ namespace ContentHubConsole
 
             //StopWindowsService();
 
+        }
+
+        private static async Task<long> GetTotalMigratedFromPath(IWebMClient mClient)
+        {
+            var st = "/consumer creative/smartpak/images/smartpaks & supporting/canine/";
+            var pathList = OriginFolder.Split('\\').Skip(4).ToList();
+            var pathPart = String.Empty;
+            foreach (var item in pathList)
+            {
+                pathPart = $@"{pathPart}\\{item}";
+            }
+
+            Console.WriteLine($"Getting Total Migrated for path part: {pathPart}");
+
+            var query = Query.CreateQuery(entities =>
+             (from e in entities
+              where e.DefinitionName == "M.Asset"
+                    && e.ModifiedByUsername == "patrick.jones@xcentium.com"
+                    && e.Property("OriginPath").Contains(st)
+              select e).Skip(0).Take(5000));
+            var mq = await mClient.Querying.QueryAsync(query);
+
+            Console.WriteLine($"Total Migrated: {mq.Items.ToList().LongCount()}");
+            return mq.Items.ToList().LongCount();
         }
 
         public static async Task DefaultExecution(IWebMClient mClient)
@@ -423,8 +448,8 @@ namespace ContentHubConsole
             var query = Query.CreateQuery(entities =>
                  (from e in entities
                   where e.Property("OriginPath").Contains("SmartPak") 
-                    && e.Property("OriginPath").Contains("Lifestyle") 
-                    && e.Property("OriginPath").Contains("Close Ups")
+                    && e.Property("OriginPath").Contains("smartpaks & supporting") 
+                    && e.Property("OriginPath").Contains("Canine")
                   select e).Skip(0).Take(1000));
             var mq = await mClient.Querying.QueryAsync(query);
             var items = mq.Items.ToList();
