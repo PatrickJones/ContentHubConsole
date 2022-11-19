@@ -395,7 +395,7 @@ namespace ContentHubConsole.Assets
         }
 
 
-        private string GetMediaType(string extension)
+        public static string GetMediaType(string extension)
         {
             return extension switch
             {

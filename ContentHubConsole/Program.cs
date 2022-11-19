@@ -54,6 +54,13 @@ using static Stylelabs.M.Sdk.Errors;
 using System.Net;
 using Stylelabs.M.Sdk.Models.Base;
 using static Stylelabs.M.Sdk.WebClient.WebClientErrors;
+using ContentHubConsole.LogicApps;
+using System.Collections.Concurrent;
+using Nito.AsyncEx;
+using Azure.Core;
+using System.Text.Json;
+using ContentHubConsole.AzureFunctions;
+using static System.Net.WebRequestMethods;
 
 namespace ContentHubConsole
 {
@@ -67,9 +74,16 @@ namespace ContentHubConsole
         private static string _serviceName = String.Empty;
 
         public static string FileLoggerLocation = String.Empty;
+        public static string DropboxUrl = String.Empty;
+        public static string LargeFileFunctionUrl = String.Empty;
         public static string OriginFolder = String.Empty;
         public static bool TestMode = false;
+        public static int TestModeTake = 1;
         public static bool IsVirtualMachine = false;
+
+        public static List<FileInfo> LogicAppFiles = new List<FileInfo>();
+        public static List<FileInfo> FunctionAppFiles = new List<FileInfo>();
+        public static List<FileInfo> ProgramAppFiles = new List<FileInfo>();
 
         static async Task Main(string[] args)
         {
@@ -97,12 +111,16 @@ namespace ContentHubConsole
             Configuration = builder.Build();
             IsVirtualMachine = Boolean.Parse(Configuration["IsVirtualMachine"]);
             TestMode = Boolean.Parse(Configuration["TestMode"]);
+            TestModeTake = Int32.Parse(Configuration["TestModeTake"]);
             OriginFolder = IsVirtualMachine ? Configuration["OriginFolderVM"] : Configuration["OriginFolder"];
+            DropboxUrl = Configuration["LogicApps:0:DropboxUrl"];
+            LargeFileFunctionUrl = Configuration["AzureFunctions:0:LargeFileFunctionUrl"];
             FileLoggerLocation = IsVirtualMachine ? Configuration["FileLoggerPathVM"] : Configuration["FileLoggerPath"];
             _contentHubToken = Configuration["ContentHubToken"];
             _serviceName = Configuration["ServiceName"];
 
             CreateLogFile();
+            SetAppFileCollections();
 
             if (_useSandbox)
             {
@@ -139,7 +157,8 @@ namespace ContentHubConsole
                 //await GetTotalMigratedFromPath(mClient);
                 //await DefaultExecution(mClient);
                 //await MigratedAssetsWithNoTypeExecution(mClient, false);
-                await MissingFileExecution(mClient);
+                //await MissingFileExecution(mClient);
+                await MissingFileExecutionUsingLogicApp(mClient);
                 //await ReloadAssetsWithZeroFileSizeExecution(mClient);
 
                 //##################
@@ -253,23 +272,62 @@ namespace ContentHubConsole
 
         }
 
-        private static async Task<long> GetTotalMigratedFromPath(IWebMClient mClient)
+        private static void SetAppFileCollections()
         {
-            var st = "/consumer creative/smartpak/images/smartpaks & supporting/canine/";
-            var pathList = OriginFolder.Split('\\').Skip(4).ToList();
+            var files = Directory.GetFiles(OriginFolder, "*.*", System.IO.SearchOption.AllDirectories);
+            foreach (var file in files)
+            {
+                FileInfo fi = new FileInfo(file);
+                if (fi.Length > 0 && fi.Length < DropboxLogicApp.MaxFileSize)
+                {
+                    LogicAppFiles.Add(fi);
+                }
+                else if (fi.Length >= DropboxLogicApp.MaxFileSize && fi.Length < 3221225472) //3GB
+                {
+                    FunctionAppFiles.Add(fi);
+                }
+                else
+                {
+                    ProgramAppFiles.Add(fi);
+                }
+            }
+        }
+
+        private static string PathTrimmer(string path, int skip, char delimeter = '\\')
+        {
+            var pathList = path.Split(delimeter).Skip(skip).ToList();
             var pathPart = String.Empty;
             foreach (var item in pathList)
             {
-                pathPart = $@"{pathPart}\\{item}";
+                pathPart = $@"{pathPart}{delimeter}{item}";
             }
 
+            return pathPart;
+        }
+
+        private static string PathTrimmerLogicApp(string path, int skip, char delimeter = '\\')
+        {
+            var pathList = path.Split(delimeter).Skip(skip).ToList();
+            var pathPart = String.Empty;
+            foreach (var item in pathList)
+            {
+                pathPart = $@"{pathPart}/{item}";
+            }
+
+            return pathPart;
+        }
+
+        private static async Task<long> GetTotalMigratedFromPath(IWebMClient mClient)
+        {
+            var pathPart = PathTrimmer(OriginFolder, 4);
+            
             Console.WriteLine($"Getting Total Migrated for path part: {pathPart}");
 
             var query = Query.CreateQuery(entities =>
              (from e in entities
               where e.DefinitionName == "M.Asset"
                     && e.ModifiedByUsername == "patrick.jones@xcentium.com"
-                    && e.Property("OriginPath").Contains(st)
+                    && e.Property("OriginPath").Contains(pathPart)
               select e).Skip(0).Take(5000));
             var mq = await mClient.Querying.QueryAsync(query);
 
@@ -363,6 +421,114 @@ namespace ContentHubConsole
             FileLogger.Log("Program.GetMissingFiles", $"Completed {gpm._covetrusAsset.Count}");
         }
 
+        public static async Task MissingFileExecutionUsingLogicApp(IWebMClient mClient)
+        {
+            List<Task> logicAppTasks = new List<Task>();
+            List<(string path, Task taskExe)> fucntionTasks = new List<(string path, Task taskExe)>();
+
+            List<FileUploadResponse> httpResponseMessages = new List<FileUploadResponse>();
+
+            var uploadMgr = new UploadManager(mClient, (string)Configuration["Sandboxes:0:Covetrus"], _contentHubToken);
+
+            var missing = await GetMissingFiles(mClient);
+            var missingLoop = TestMode ? missing.Take(TestModeTake).ToList() : missing;
+
+            Console.WriteLine($"Missing file count: {missingLoop.Count}");
+            FileLogger.Log("Program.MissingFileExecutionUsingLogicApp.", $"Missing file count: {missingLoop.Count}");
+
+            foreach (var missed in missingLoop)
+            {
+                var fileInfo = new FileInfo(missed.LocalPath);
+                if (fileInfo.Length > DropboxLogicApp.MaxFileSize)
+                {
+                    var largeFunc = new LargeFileUploadFunction();
+                    var funcReq = new LargeFileFunctionRequest((string)Configuration["Sandboxes:0:Covetrus"], _contentHubToken, GetFileContentAsBase64(missed.LocalPath), fileInfo.Length, fileInfo.Name, UploadManager.GetMediaType(fileInfo.Extension), (string)Configuration["ContentHubUploadConfiguration"]);
+
+                    fucntionTasks.Add((missed.LocalPath, largeFunc.Send(funcReq)));
+                }
+                else
+                {
+                    var drop = new DropboxLogicApp();
+                    var req = new LogicAppRequest((string)Configuration["Sandboxes:0:Covetrus"], _contentHubToken, (string)Configuration["ContentHubUploadConfiguration"], PathTrimmerLogicApp(missed.LocalPath, 4), false);
+
+                    logicAppTasks.Add(drop.Send(req));
+                }
+            }
+
+            await logicAppTasks.WhenAll();
+
+            try
+            {
+                foreach (var task in logicAppTasks)
+                {
+                    var result = ((Task<HttpResponseMessage>)task).Result;
+                    if (result.IsSuccessStatusCode)
+                    {
+                        var respData = await result.Content.ReadAsStringAsync();
+                        var content = System.Text.Json.JsonSerializer.Deserialize<List<LogicAppResponse>>(respData);
+                        var firstResponse = content.FirstOrDefault();
+                        httpResponseMessages.Add(new FileUploadResponse(firstResponse.ContentHubReponse.Asset_Id, firstResponse.BoxPath));
+                    }
+                    else
+                    {
+                        var respData = await result.RequestMessage.Content.ReadAsStringAsync();
+                        FileLogger.Log("Program.MissingFileExecutionUsingLogicApp.", $"LogicApp request Failed:\n  {respData}");
+                    }
+                }
+            }
+            catch { }
+
+            await fucntionTasks.Select(s => s.taskExe).WhenAll();
+
+            try
+            {
+                foreach (var task in fucntionTasks)
+                {
+                    var result = ((Task<HttpResponseMessage>)task.taskExe).Result;
+                    if (result.IsSuccessStatusCode)
+                    {
+                        var respData = await result.Content.ReadAsStringAsync();
+                        var content = JsonConvert.DeserializeObject<LargeFileFunctionResponse>(respData);
+                        httpResponseMessages.Add(new FileUploadResponse(content.Asset_id, task.path));
+                    }
+                    else
+                    {
+                        var respData = await result.RequestMessage.Content.ReadAsStringAsync();
+                        FileLogger.Log("Program.MissingFileExecutionUsingLogicApp.", $"LargeFile function request Failed:\n  {respData}");
+                    }
+                }
+            }
+            catch { }
+
+            var uploads = httpResponseMessages;
+            Console.WriteLine($"Logic App upload count: {uploads.Count}");
+            FileLogger.Log("Program.MissingFileExecutionUsingLogicApp.", $"Logic App upload count: {uploads.Count}");
+
+            var gpm = new PhotographyBasicAssetDetailer(mClient, uploads);
+            await gpm.UpdateAllAssets();
+            await gpm.SaveAllAssets();
+
+            if (gpm._failedAssets.Any())
+            {
+                FileLogger.Log("Program.MissingFileExecutionUsingLogicApp", $"Failed Assets:");
+                foreach (var failed in gpm._failedAssets)
+                {
+                    var fp = $"{failed.OriginPath} \n Error: {failed.Errors.FirstOrDefault()}";
+                    Console.WriteLine(fp);
+                    FileLogger.Log("Program.MissingFileExecutionUsingLogicApp", fp);
+                    FileLogger.AddToFailedUploadLog(failed.OriginPath);
+                }
+            }
+
+            Console.WriteLine($"Completed {gpm._covetrusAsset.Count}");
+            FileLogger.Log("Program.MissingFileExecutionUsingLogicApp", $"Completed {gpm._covetrusAsset.Count}");
+        }
+
+        private static string GetFileContentAsBase64(string localPath)
+        {
+            Byte[] bytes = System.IO.File.ReadAllBytes(localPath);
+            return Convert.ToBase64String(bytes);
+        }
 
         public static async Task ReloadAssetsWithZeroFileSizeExecution(IWebMClient mClient)
         {
@@ -450,11 +616,11 @@ namespace ContentHubConsole
                   where e.Property("OriginPath").Contains("SmartPak") 
                     && e.Property("OriginPath").Contains("smartpaks & supporting") 
                     && e.Property("OriginPath").Contains("Canine")
-                  select e).Skip(0).Take(1000));
+                  select e).Skip(0).Take(3000));
             var mq = await mClient.Querying.QueryAsync(query);
             var items = mq.Items.ToList();
             var qFilenames = items.Select(s => (string)s.GetPropertyValue("Filename")).ToList();
-            var qOriginPaths = items.Select(s => (string)s.GetPropertyValue("OriginPath")).ToList();
+           // var qOriginPaths = items.Select(s => (string)s.GetPropertyValue("OriginPath")).ToList();
 
             var directoryPath = OriginFolder;
             var files = Directory.GetFiles(directoryPath, "*.*", System.IO.SearchOption.AllDirectories);
