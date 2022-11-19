@@ -158,9 +158,9 @@ namespace ContentHubConsole
 
                 //await GetTotalMigratedFromPath(mClient);
                 //await DefaultExecution(mClient);
-                //await MigratedAssetsWithNoTypeExecution(mClient, false);
                 //await MissingFileExecution(mClient);
                 await MissingFileExecutionUsingLogicApp(mClient);
+                await MigratedAssetsWithNoTypeExecution(mClient, false);
                 //await ReloadAssetsWithZeroFileSizeExecution(mClient);
 
                 //##################
@@ -443,18 +443,30 @@ namespace ContentHubConsole
                 var fileInfo = new FileInfo(missed.LocalPath);
                 if (fileInfo.Length > DropboxLogicApp.MaxFileSize)
                 {
+                    var log = $"Adding missed file {missed} to LargeFileUploadFunction tasks - {fileInfo.Length} bytes.";
+                    
                     var largeFunc = new LargeFileUploadFunction();
                     var funcReq = new LargeFileFunctionRequest((string)Configuration["Sandboxes:0:Covetrus"], _contentHubToken, GetFileContentAsBase64(missed.LocalPath), fileInfo.Length, fileInfo.Name, UploadManager.GetMediaType(fileInfo.Extension), (string)Configuration["ContentHubUploadConfiguration"]);
 
                     fucntionTasks.Add((missed.LocalPath, largeFunc.Send(funcReq)));
+
+                    Console.WriteLine(log);
+                    FileLogger.Log("Program.MissingFileExecutionUsingLogicApp.", log);
                 }
                 else
                 {
+                    var log = $"Adding missed file {missed} to DropboxLogicApp tasks - {fileInfo.Length} bytes.";
+                    Console.WriteLine($"Missing file count: {missingLoop.Count}");
+                    FileLogger.Log("Program.MissingFileExecutionUsingLogicApp.", $"Missing file count: {missingLoop.Count}");
+
                     var drop = new DropboxLogicApp();
                     var req = new LogicAppRequest((string)Configuration["Sandboxes:0:Covetrus"], _contentHubToken, (string)Configuration["ContentHubUploadConfiguration"], PathTrimmerLogicApp(missed.LocalPath, 4), false);
                     req.Filename = fileInfo.Name;
 
                     logicAppTasks.Add(drop.Send(req));
+
+                    Console.WriteLine(log);
+                    FileLogger.Log("Program.MissingFileExecutionUsingLogicApp.", log);
                 }
             }
 
@@ -462,6 +474,10 @@ namespace ContentHubConsole
 
             try
             {
+                var processLog = $"Processing logic app tasks... - {fucntionTasks.Count}";
+                Console.WriteLine(processLog);
+                FileLogger.Log("Program.MissingFileExecutionUsingLogicApp.", processLog);
+
                 foreach (var task in logicAppTasks)
                 {
                     var result = ((Task<HttpResponseMessage>)task).Result;
@@ -485,6 +501,10 @@ namespace ContentHubConsole
 
             try
             {
+                var processLog = $"Processing large file function app tasks... - {fucntionTasks.Count}";
+                Console.WriteLine(processLog);
+                FileLogger.Log("Program.MissingFileExecutionUsingLogicApp.", processLog);
+
                 foreach (var task in fucntionTasks)
                 {
                     var result = ((Task<HttpResponseMessage>)task.taskExe).Result;

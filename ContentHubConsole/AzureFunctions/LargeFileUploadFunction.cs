@@ -14,6 +14,10 @@ namespace ContentHubConsole.AzureFunctions
     {
         public async Task<HttpResponseMessage> Send(LargeFileFunctionRequest request)
         {
+            var log = $"Sending request to large file function app - {request.Filename}";
+            Console.WriteLine(log);
+            FileLogger.Log("DropboxLogicApp.Send.", log);
+
             HttpClient _client = new HttpClient();
             _client.Timeout = TimeSpan.FromHours(1);
             _client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));

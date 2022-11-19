@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -19,6 +20,10 @@ namespace ContentHubConsole.LogicApps
         public static long MaxFileSize = 52428800;
         public async Task<HttpResponseMessage> Send(LogicAppRequest request)
         {
+            var log = $"Sending request to Dropbox logic app - {request.Filename}";
+            Console.WriteLine(log);
+            FileLogger.Log("DropboxLogicApp.Send.", log);
+
             HttpClient _client = new HttpClient();
             _client.Timeout = TimeSpan.FromHours(1);
             _client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
