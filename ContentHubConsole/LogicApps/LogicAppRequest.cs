@@ -21,6 +21,7 @@ namespace ContentHubConsole.LogicApps
         public string ContentHubToken { get; set; }
         public string ContentHubUploadConfiguration { get; set; }
         public string DropboxFolderPath { get; set; }
+        public string Filename { get; set; }
         public bool IsBoxRoot { get; set; }
     }
 }

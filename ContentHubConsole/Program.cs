@@ -75,6 +75,7 @@ namespace ContentHubConsole
 
         public static string FileLoggerLocation = String.Empty;
         public static string DropboxUrl = String.Empty;
+        public static string DropboxSingleFileUrl = String.Empty;
         public static string LargeFileFunctionUrl = String.Empty;
         public static string OriginFolder = String.Empty;
         public static bool TestMode = false;
@@ -114,6 +115,7 @@ namespace ContentHubConsole
             TestModeTake = Int32.Parse(Configuration["TestModeTake"]);
             OriginFolder = IsVirtualMachine ? Configuration["OriginFolderVM"] : Configuration["OriginFolder"];
             DropboxUrl = Configuration["LogicApps:0:DropboxUrl"];
+            DropboxSingleFileUrl = Configuration["LogicApps:0:DropboxSingleFileUrl"];
             LargeFileFunctionUrl = Configuration["AzureFunctions:0:LargeFileFunctionUrl"];
             FileLoggerLocation = IsVirtualMachine ? Configuration["FileLoggerPathVM"] : Configuration["FileLoggerPath"];
             _contentHubToken = Configuration["ContentHubToken"];
@@ -450,6 +452,7 @@ namespace ContentHubConsole
                 {
                     var drop = new DropboxLogicApp();
                     var req = new LogicAppRequest((string)Configuration["Sandboxes:0:Covetrus"], _contentHubToken, (string)Configuration["ContentHubUploadConfiguration"], PathTrimmerLogicApp(missed.LocalPath, 4), false);
+                    req.Filename = fileInfo.Name;
 
                     logicAppTasks.Add(drop.Send(req));
                 }

@@ -24,7 +24,7 @@ namespace ContentHubConsole.LogicApps
             _client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
             var payload = new StringContent(JsonConvert.SerializeObject(request));
-            return await _client.PostAsync(Program.DropboxUrl, payload);
+            return await _client.PostAsync(Program.DropboxSingleFileUrl, payload);
         }
     }
 }
