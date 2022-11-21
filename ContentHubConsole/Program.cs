@@ -480,19 +480,30 @@ namespace ContentHubConsole
 
                 foreach (var task in logicAppTasks)
                 {
-                    var result = ((Task<HttpResponseMessage>)task).Result;
-                    if (result.IsSuccessStatusCode)
+                    try
                     {
-                        var respData = await result.Content.ReadAsStringAsync();
-                        var content = System.Text.Json.JsonSerializer.Deserialize<List<LogicAppResponse>>(respData);
-                        var firstResponse = content.FirstOrDefault();
-                        httpResponseMessages.Add(new FileUploadResponse(firstResponse.ContentHubReponse.Asset_Id, firstResponse.BoxPath));
+                        var result = ((Task<HttpResponseMessage>)task).Result;
+                        if (result.IsSuccessStatusCode)
+                        {
+                            var respData = await result.Content.ReadAsStringAsync();
+                            var content = System.Text.Json.JsonSerializer.Deserialize<List<LogicAppResponse>>(respData);
+                            var firstResponse = content.FirstOrDefault();
+                            httpResponseMessages.Add(new FileUploadResponse(firstResponse.ContentHubReponse.Asset_Id, firstResponse.BoxPath));
+                        }
+                        else
+                        {
+                            var respData = await result.RequestMessage.Content.ReadAsStringAsync();
+                            FileLogger.Log("Program.MissingFileExecutionUsingLogicApp.", $"LogicApp request Failed:\n  {respData}");
+                        }
+
                     }
-                    else
+                    catch (Exception ex)
                     {
-                        var respData = await result.RequestMessage.Content.ReadAsStringAsync();
-                        FileLogger.Log("Program.MissingFileExecutionUsingLogicApp.", $"LogicApp request Failed:\n  {respData}");
-                    }
+                        var processExLog = $"Error Processing logic app task - Exception: {ex.Message}";
+                        Console.WriteLine(processLog);
+                        FileLogger.Log("Program.MissingFileExecutionUsingLogicApp.", processLog);
+                        continue;
+                    }   
                 }
             }
             catch { }
@@ -507,17 +518,29 @@ namespace ContentHubConsole
 
                 foreach (var task in fucntionTasks)
                 {
-                    var result = ((Task<HttpResponseMessage>)task.taskExe).Result;
-                    if (result.IsSuccessStatusCode)
+                    try
                     {
-                        var respData = await result.Content.ReadAsStringAsync();
-                        var content = JsonConvert.DeserializeObject<LargeFileFunctionResponse>(respData);
-                        httpResponseMessages.Add(new FileUploadResponse(content.Asset_id, task.path));
+                        var result = ((Task<HttpResponseMessage>)task.taskExe).Result;
+                        if (result.IsSuccessStatusCode)
+                        {
+                            var respData = await result.Content.ReadAsStringAsync();
+                            var content = JsonConvert.DeserializeObject<LargeFileFunctionResponse>(respData);
+                            httpResponseMessages.Add(new FileUploadResponse(content.Asset_id, task.path));
+                        }
+                        else
+                        {
+                            var respData = await result?.Content?.ReadAsStringAsync();
+                            Console.WriteLine($"LargeFile function request Failed:\n  {respData}.\n Chunking manually.");
+                            FileLogger.Log("Program.MissingFileExecutionUsingLogicApp.", $"LargeFile function request Failed:\n  {respData}");
+                            httpResponseMessages.Add(new FileUploadResponse(0, task.path));
+                        }
                     }
-                    else
+                    catch (Exception ex)
                     {
-                        var respData = await result.RequestMessage.Content.ReadAsStringAsync();
-                        FileLogger.Log("Program.MissingFileExecutionUsingLogicApp.", $"LargeFile function request Failed:\n  {respData}");
+                        var processExLog = $"Error Processing large file function app task - {task.path}\n Exception: {ex.Message}";
+                        Console.WriteLine(processLog);
+                        FileLogger.Log("Program.MissingFileExecutionUsingLogicApp.", processLog);
+                        continue;
                     }
                 }
             }
@@ -526,6 +549,44 @@ namespace ContentHubConsole
             var uploads = httpResponseMessages;
             Console.WriteLine($"Logic App upload count: {uploads.Count}");
             FileLogger.Log("Program.MissingFileExecutionUsingLogicApp.", $"Logic App upload count: {uploads.Count}");
+
+            List<Task> azureFailed = new List<Task>();
+            if (uploads.Any(a => a.AssetId == 0))
+            {
+                var assetZero = uploads.Where(w => w.AssetId == 0).ToList();
+
+                foreach (var fi in assetZero)
+                {
+                    uploads.Remove(fi);
+                    azureFailed.Add(uploadMgr.UploadLargeLocalFile(fi.LocalPath));
+                }
+
+                await azureFailed.WhenAll();
+
+                try
+                {
+                    var azProcessLog = $"Processing large files that failed in Azure - {azureFailed.Count}";
+                    Console.WriteLine(azProcessLog);
+                    FileLogger.Log("Program.MissingFileExecutionUsingLogicApp.", azProcessLog);
+
+                    foreach (var task in azureFailed)
+                    {
+                        var result = ((Task<FileUploadResponse>)task).Result;
+                        if (result.AssetId > 0)
+                        {
+                            uploads.Add(result);
+                        }
+                        else
+                        {
+                            var mChunkingLog = $"Manual chunking and upload failed - {result.LocalPath}";
+                            Console.WriteLine(mChunkingLog);
+                            FileLogger.Log("Program.MissingFileExecutionUsingLogicApp.", mChunkingLog);
+                        }
+                    }
+                }
+                catch { }
+
+            }
 
             var gpm = new PhotographyBasicAssetDetailer(mClient, uploads);
             await gpm.UpdateAllAssets();

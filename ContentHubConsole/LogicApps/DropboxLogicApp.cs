@@ -27,6 +27,7 @@ namespace ContentHubConsole.LogicApps
             HttpClient _client = new HttpClient();
             _client.Timeout = TimeSpan.FromHours(1);
             _client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            _client.DefaultRequestHeaders.Add("x-functions-key", "aGhNxTnTzYQW7CzSaWe3AMDw4mhF9gAPHWy03xBf/JHr97qg5yWjbA==");
 
             var payload = new StringContent(JsonConvert.SerializeObject(request));
             return await _client.PostAsync(Program.DropboxSingleFileUrl, payload);

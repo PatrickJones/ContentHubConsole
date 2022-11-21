@@ -14,16 +14,29 @@ namespace ContentHubConsole.AzureFunctions
     {
         public async Task<HttpResponseMessage> Send(LargeFileFunctionRequest request)
         {
-            var log = $"Sending request to large file function app - {request.Filename}";
-            Console.WriteLine(log);
-            FileLogger.Log("DropboxLogicApp.Send.", log);
+            try
+            {
+                var log = $"Sending request to large file function app - {request.Filename}";
+                Console.WriteLine(log);
+                FileLogger.Log("DropboxLogicApp.Send.", log);
 
-            HttpClient _client = new HttpClient();
-            _client.Timeout = TimeSpan.FromHours(1);
-            _client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                HttpClient _client = new HttpClient();
+                _client.Timeout = TimeSpan.FromHours(1);
+                _client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
-            var payload = new StringContent(JsonConvert.SerializeObject(request));
-            return await _client.PostAsync(Program.LargeFileFunctionUrl, payload);
+                var payload = new StringContent(JsonConvert.SerializeObject(request));
+                return await _client.PostAsync(Program.LargeFileFunctionUrl, payload);
+
+            }
+            catch (Exception ex)
+            {
+                var erLog = $"Error sending request to large file function app - {request.Filename}\nError:{ex.Message}";
+                Console.WriteLine(erLog);
+                FileLogger.Log("DropboxLogicApp.Send.", erLog);
+                var httpResp = new HttpResponseMessage(System.Net.HttpStatusCode.InternalServerError);
+                httpResp.Content = new StringContent(ex.Message);
+                return httpResp;
+            }      
         }
     }
 }
