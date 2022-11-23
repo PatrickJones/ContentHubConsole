@@ -109,7 +109,7 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Taxonomy
 
         private async Task LoadSeasons(int skip = 0, int take = 100)
         {
-            if (!MigrationOriginEntities.Any())
+            if (!SeasonEntities.Any())
             {
                 var seasons = await _webMClient.Entities.GetByDefinitionAsync(CV_SEASON, null, skip, take);
                 SeasonEntities = seasons.Items.ToList();

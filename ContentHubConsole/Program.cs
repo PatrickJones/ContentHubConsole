@@ -69,6 +69,7 @@ namespace ContentHubConsole
         private static bool _useSandbox = false;
         static IConfiguration Configuration { get; set; }
         static IConfigurationRefresher _refresher;
+        private static long _contenthubMaxFileSize = 1048576;
 
         private static string _contentHubToken = String.Empty;
         private static string _serviceName = String.Empty;
@@ -157,10 +158,10 @@ namespace ContentHubConsole
                 var mClient = clientFactory.Client();
 
                 //await GetTotalMigratedFromPath(mClient);
-                //await DefaultExecution(mClient);
+                await DefaultExecution(mClient);
                 //await MissingFileExecution(mClient);
-                await MissingFileExecutionUsingLogicApp(mClient);
-                await MigratedAssetsWithNoTypeExecution(mClient, false);
+                //await MissingFileExecutionUsingLogicApp(mClient);
+                //await MigratedAssetsWithNoTypeExecution(mClient, false);
                 //await ReloadAssetsWithZeroFileSizeExecution(mClient);
 
                 //##################
@@ -427,6 +428,7 @@ namespace ContentHubConsole
         {
             List<Task> logicAppTasks = new List<Task>();
             List<(string path, Task taskExe)> fucntionTasks = new List<(string path, Task taskExe)>();
+            List<string> manulChunking = new List<string>();
 
             List<FileUploadResponse> httpResponseMessages = new List<FileUploadResponse>();
 
@@ -442,6 +444,11 @@ namespace ContentHubConsole
             {
                 var fileInfo = new FileInfo(missed.LocalPath);
                 if (fileInfo.Length > DropboxLogicApp.MaxFileSize)
+                {
+                    //manulChunking.Add(missed.LocalPath);
+                    httpResponseMessages.Add(new FileUploadResponse(0, missed.LocalPath));
+                }
+                else if (fileInfo.Length > _contenthubMaxFileSize && fileInfo.Length < DropboxLogicApp.MaxFileSize)
                 {
                     var log = $"Adding missed file {missed} to LargeFileUploadFunction tasks - {fileInfo.Length} bytes.";
                     
@@ -698,8 +705,8 @@ namespace ContentHubConsole
             var query = Query.CreateQuery(entities =>
                  (from e in entities
                   where e.Property("OriginPath").Contains("SmartPak") 
-                    && e.Property("OriginPath").Contains("smartpaks & supporting") 
-                    && e.Property("OriginPath").Contains("Canine")
+                    && e.Property("OriginPath").Contains("Lifestyle") 
+                    && e.Property("OriginPath").Contains("Competition")
                   select e).Skip(0).Take(3000));
             var mq = await mClient.Querying.QueryAsync(query);
             var items = mq.Items.ToList();

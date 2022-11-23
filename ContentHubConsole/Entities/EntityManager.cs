@@ -72,7 +72,7 @@ namespace ContentHubConsole.Entities
         public async Task<List<FileUploadResponse>> GetMigratedAssetsWithNoType(bool checkOriginPath)
         {
             var fileUploadResponses = new List<FileUploadResponse>();
-            var dateMin = DateTime.Today; //new DateTime(2022, 11, 11)
+            var dateMin = DateTime.Today;// new DateTime(2022, 11, 22);
             int skip = 0;
             var take = 5000;
 
@@ -93,7 +93,7 @@ namespace ContentHubConsole.Entities
                       where e.DefinitionName == "M.Asset"
                         && e.Parent("AssetTypeToAsset") == null
                         && e.ModifiedByUsername == "patrick.jones@xcentium.com"
-                        && (e.Property("OriginPath") == String.Empty || e.Property("OriginPath").Contains("SmartPaks & Supporting"))
+                        && (e.Property("OriginPath") == String.Empty || e.Property("OriginPath").Contains("Competition"))
                         && e.ModifiedOn > dateMin
                       select e).Skip(skip).Take(take));
                 }
