@@ -89,6 +89,7 @@ namespace ContentHubConsole.Assets
 
                 var uploadSource = new LocalUploadSource(fileResp.LocalPath, fileInfo.Name);
                 var request = new UploadRequest(uploadSource, UPLOAD_CONFIGURATION, "NewMainFile");
+                request.ActionParameters = new Dictionary<string, object>();
                 request.ActionParameters.Add(new KeyValuePair<string, object>("AssetId", fileResp.AssetId));
 
                 // Initiate upload and wait for its completion.

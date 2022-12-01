@@ -158,8 +158,8 @@ namespace ContentHubConsole
                 var mClient = clientFactory.Client();
 
                 //await GetTotalMigratedFromPath(mClient);
-                await DefaultExecution(mClient);
-                //await MissingFileExecution(mClient);
+                //await DefaultExecution(mClient);
+                await MissingFileExecution(mClient);
                 //await MissingFileExecutionUsingLogicApp(mClient);
                 //await MigratedAssetsWithNoTypeExecution(mClient, false);
                 //await ReloadAssetsWithZeroFileSizeExecution(mClient);
@@ -684,7 +684,10 @@ namespace ContentHubConsole
 
             var query = Query.CreateQuery(entities =>
                  (from e in entities
-                  where e.Property("OriginPath").Contains("SmartPak") && e.Property("OriginPath").Contains("Lifestyle") && e.Property("OriginPath").Contains("Clipping") && e.Property("Filesize") == 0
+                  where e.Property("OriginPath").Contains("SmartPak") 
+                    && e.Property("OriginPath").Contains("Lifestyle") 
+                    && e.Property("OriginPath").Contains("Riding") 
+                    && e.Property("Filesize") == 0
                   select e).Skip(0).Take(1000)); ;
             var mq = await mClient.Querying.QueryAsync(query);
             var items = mq.Items.ToList();
@@ -706,7 +709,8 @@ namespace ContentHubConsole
                  (from e in entities
                   where e.Property("OriginPath").Contains("SmartPak") 
                     && e.Property("OriginPath").Contains("Lifestyle") 
-                    && e.Property("OriginPath").Contains("Competition")
+                    && e.Property("OriginPath").Contains("Themes")
+                    && e.CreatedOn > DateTime.Today.Subtract(TimeSpan.FromDays(1))
                   select e).Skip(0).Take(3000));
             var mq = await mClient.Querying.QueryAsync(query);
             var items = mq.Items.ToList();
