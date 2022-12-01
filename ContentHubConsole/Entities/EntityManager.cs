@@ -93,7 +93,7 @@ namespace ContentHubConsole.Entities
                       where e.DefinitionName == "M.Asset"
                         && e.Parent("AssetTypeToAsset") == null
                         && e.ModifiedByUsername == "patrick.jones@xcentium.com"
-                        && (e.Property("OriginPath") == String.Empty || e.Property("OriginPath").Contains("Competition"))
+                        && e.Property("OriginPath").Contains("MASTER FILES")
                         && e.ModifiedOn > dateMin
                       select e).Skip(skip).Take(take));
                 }
