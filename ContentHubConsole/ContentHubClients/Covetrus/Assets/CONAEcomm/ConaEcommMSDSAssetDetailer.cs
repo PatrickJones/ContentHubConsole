@@ -3,6 +3,7 @@ using Stylelabs.M.Sdk.WebClient;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection.Metadata;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -38,22 +39,23 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Assets.CONAEcomm
 
                     await AddTagFromPath(asset);
 
-                    SetStockImages(asset);
-                    SetProductUsage(asset);
+                    await AssignToProduct(asset);
+                    //SetStockImages(asset);
+                    //SetProductUsage(asset);
                     //SetOffsite(asset);
                     //SetOnsite(asset);
                     //SetWebpage(asset);
                     SetUsages(asset);
-                    SetSeason(asset);
-                    SetAdvertising(asset);
+                    //SetSeason(asset);
+                    //SetAdvertising(asset);
                     //await AddBrandFromPath(asset);
 
-                    SetYear(asset);
-                    SetSpecificYear(asset);
-                    SetMonth(asset);
-                    SetWeek(asset);
+                    //SetYear(asset);
+                    //SetSpecificYear(asset);
+                    //SetMonth(asset);
+                    //SetWeek(asset);
 
-                    UpdateAssetType(asset);
+                    //UpdateAssetType(asset);
 
                     var log = $"New asset {asset.Asset.Id} from path {asset.OriginPath}";
                     Console.WriteLine(log);
@@ -73,9 +75,8 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Assets.CONAEcomm
 
         public override string RemoveLocalPathPart(string originPath)
         {
-            var pathSplit = Program.IsVirtualMachine ? originPath.Split('\\').Skip(1).ToArray() : originPath.Split('\\').Skip(3).ToArray();
+            var pathSplit = Program.IsVirtualMachine ? originPath.Split('\\').Skip(1).ToArray() : originPath.Split('\\').Skip(5).ToArray();
             var result = new StringBuilder();
-            result.Append("\\MASTER FILES");
 
             for (int i = 0; i < pathSplit.Length; i++)
             {
@@ -87,28 +88,16 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Assets.CONAEcomm
 
         internal void SetUsages(CovetrusAsset asset)
         {
-            if (asset.OriginPath.Contains("Print", StringComparison.InvariantCultureIgnoreCase))
+            List<long> usageIds = _taxonomyManager.AssetUsageEntities
+            .Where(w => w.Identifier.Contains("Guidelines") 
+                || w.Identifier.Contains("Document") 
+                || w.Identifier.Contains("B2B") 
+                || w.Identifier.Contains("Product"))
+            .Select(s => s.Id.Value).ToList();
+
+            foreach (var usage in usageIds)
             {
-                List<long> usageIds = _taxonomyManager.AssetUsageEntities
-                .Where(w => w.Identifier.Contains("Print"))
-                .Select(s => s.Id.Value).ToList();
-
-                foreach (var usage in usageIds)
-                {
-                    asset.AddChildToManyParentsRelation(usage, RelationNames.RELATION_ASSETUSAGE_TOASSET);
-                }
-            }
-
-            if (asset.OriginPath.Contains("style_guide", StringComparison.InvariantCultureIgnoreCase))
-            {
-                List<long> usageIds = _taxonomyManager.AssetUsageEntities
-                .Where(w => w.Identifier.Contains("StyleGuide"))
-                .Select(s => s.Id.Value).ToList();
-
-                foreach (var usage in usageIds)
-                {
-                    asset.AddChildToManyParentsRelation(usage, RelationNames.RELATION_ASSETUSAGE_TOASSET);
-                }
+                asset.AddChildToManyParentsRelation(usage, RelationNames.RELATION_ASSETUSAGE_TOASSET);
             }
         }
 

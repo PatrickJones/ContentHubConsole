@@ -159,10 +159,10 @@ namespace ContentHubConsole
                 var mClient = clientFactory.Client();
 
                 //await GetTotalMigratedFromPath(mClient);
-                //await DefaultExecution(mClient);
+                await DefaultExecution(mClient);
                 //await MissingFileExecution(mClient);
                 //await MissingFileExecutionUsingLogicApp(mClient);
-                await MigratedAssetsWithNoTypeExecution(mClient, true);
+                //await MigratedAssetsWithNoTypeExecution(mClient, true);
                 //await ReloadAssetsWithZeroFileSizeExecution(mClient);
 
                 //##################
@@ -342,11 +342,11 @@ namespace ContentHubConsole
         public static async Task DefaultExecution(IWebMClient mClient)
         {
             var uploadMgr = new UploadManager(mClient, (string)Configuration["Sandboxes:0:Covetrus"], _contentHubToken);
-            var directoryPath = ConaEcommGraphicAssetDetailer.UploadPath;
+            var directoryPath = ConaEcommMSDSAssetDetailer.UploadPath;
             await uploadMgr.UploadLocalDirectory(directoryPath, SearchOption.AllDirectories);
             await uploadMgr.UploadLargeFileLocalDirectory();
 
-            var gpm = new ConaEcommGraphicAssetDetailer(mClient, uploadMgr.DirectoryFileUploadResponses);
+            var gpm = new ConaEcommMSDSAssetDetailer(mClient, uploadMgr.DirectoryFileUploadResponses);
             await gpm.UpdateAllAssets();
             await gpm.SaveAllAssets();
 
@@ -360,7 +360,7 @@ namespace ContentHubConsole
                     failedFiles.Add(uploadFailedFile);
                 }
 
-                var gpmRetry = new ConaEcommGraphicAssetDetailer(mClient, failedFiles);
+                var gpmRetry = new ConaEcommMSDSAssetDetailer(mClient, failedFiles);
                 await gpmRetry.UpdateAllAssets();
                 await gpmRetry.SaveAllAssets();
 
@@ -390,7 +390,7 @@ namespace ContentHubConsole
             Console.WriteLine($"Missing file count: {uploads.Count}");
             FileLogger.Log("Program.GetMissingFiles.", $"Missing file count: {uploads.Count}");
 
-            var gpm = new ConaEcommGraphicAssetDetailer(mClient, uploads);
+            var gpm = new ConaEcommMSDSAssetDetailer(mClient, uploads);
             await gpm.UpdateAllAssets();
             await gpm.SaveAllAssets();
 
@@ -404,7 +404,7 @@ namespace ContentHubConsole
                     failedFiles.Add(uploadFailedFile);
                 }
 
-                var gpmRetry = new ConaEcommGraphicAssetDetailer(mClient, failedFiles);
+                var gpmRetry = new ConaEcommMSDSAssetDetailer(mClient, failedFiles);
                 await gpmRetry.UpdateAllAssets();
                 await gpmRetry.SaveAllAssets();
 
@@ -596,7 +596,7 @@ namespace ContentHubConsole
 
             }
 
-            var gpm = new ConaEcommGraphicAssetDetailer(mClient, uploads);
+            var gpm = new ConaEcommMSDSAssetDetailer(mClient, uploads);
             await gpm.UpdateAllAssets();
             await gpm.SaveAllAssets();
 
@@ -625,7 +625,7 @@ namespace ContentHubConsole
         public static async Task ReloadAssetsWithZeroFileSizeExecution(IWebMClient mClient)
         {
             var uploadMgr = new UploadManager(mClient, (string)Configuration["Sandboxes:0:Covetrus"], _contentHubToken);
-            //var directoryPath = ConaEcommGraphicAssetDetailer.UploadPath;
+            //var directoryPath = ConaEcommMSDSAssetDetailer.UploadPath;
             var uploads = await GetZeroFiles(mClient);
             await uploadMgr.UploadLocalDirectoryVersions(uploads);
             await uploadMgr.UploadLargeFileLocalDirectoryVersions();
@@ -637,14 +637,14 @@ namespace ContentHubConsole
         public static async Task MigratedAssetsWithNoTypeExecution(IWebMClient mClient, bool checkOriginPath)
         {
             var uploadMgr = new UploadManager(mClient, (string)Configuration["Sandboxes:0:Covetrus"], _contentHubToken);
-            //var directoryPath = ConaEcommGraphicAssetDetailer.UploadPath;
+            //var directoryPath = ConaEcommMSDSAssetDetailer.UploadPath;
             //await uploadMgr.UploadLocalDirectory(directoryPath, SearchOption.AllDirectories);
             //await uploadMgr.UploadLargeFileLocalDirectory();
 
             var em = new EntityManager(mClient);
             var mig = await em.GetMigratedAssetsWithNoType(checkOriginPath);
 
-            var gpm = new ConaEcommGraphicAssetDetailer(mClient, mig);// uploadMgr.DirectoryFileUploadResponses);
+            var gpm = new ConaEcommMSDSAssetDetailer(mClient, mig);// uploadMgr.DirectoryFileUploadResponses);
             await gpm.UpdateAllAssets();
             await gpm.SaveAllAssets();
 
@@ -658,7 +658,7 @@ namespace ContentHubConsole
                     failedFiles.Add(uploadFailedFile);
                 }
 
-                var gpmRetry = new ConaEcommGraphicAssetDetailer(mClient, failedFiles);
+                var gpmRetry = new ConaEcommMSDSAssetDetailer(mClient, failedFiles);
                 await gpmRetry.UpdateAllAssets();
                 await gpmRetry.SaveAllAssets();
 

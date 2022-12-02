@@ -1,10 +1,13 @@
 ﻿using ContentHubConsole.Assets;
 using ContentHubConsole.ContentHubClients.Covetrus.Assets.GPM;
 using ContentHubConsole.ContentHubClients.Covetrus.Taxonomy;
+using ContentHubConsole.Entities;
+using ContentHubConsole.Products;
 using ContentHubConsole.Taxonomies;
 using Nito.AsyncEx;
 using Stylelabs.M.Sdk.Contracts.Base;
 using Stylelabs.M.Sdk.WebClient;
+using Stylelabs.M.Sdk.WebClient.Extensions;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -19,6 +22,7 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Assets
     {
         private readonly IWebMClient _webMClient;
         internal CovetrusTaxonomyManager _taxonomyManager;
+        internal ProductManager _productManager;
 
         internal ICollection<CovetrusAsset> _covetrusAsset = new List<CovetrusAsset>();
         internal ICollection<CovetrusAsset> _failedAssets = new List<CovetrusAsset>();
@@ -29,6 +33,7 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Assets
         {
             _webMClient = webMClient;
             _taxonomyManager = new CovetrusTaxonomyManager(webMClient);
+            _productManager = new ProductManager(webMClient);
             CreateAssets(fileUploadResponses);
         }
 
@@ -104,6 +109,27 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Assets
             if (seasonId != 0)
             {
                 asset.AddChildToManyParentsRelation(seasonId, CovetrusRelationNames.RELATION_SEASON_TOASSET);
+            }
+        }
+
+        internal async Task AssignToProduct(CovetrusAsset asset)
+        {
+            var filename = await asset.Asset.GetPropertyValueAsync<string>("Filename");
+
+            if (filename.StartsWith("P") && filename.EndsWith(".pdf"))
+            {
+                var split = filename.Split('.');
+                var productId = split[0].Replace("P", "");
+
+                var products = await _productManager.GetProductByNumber(productId);
+
+                if (products.Count > 0)
+                {
+                    foreach (var p in products)
+                    {
+                        asset.AddChildToManyParentsRelation(p.Id.Value, RelationNames.RELATION_PRODUCT_TOASSET);
+                    }
+                }
             }
         }
 
