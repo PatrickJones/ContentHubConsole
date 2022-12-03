@@ -159,17 +159,28 @@ namespace ContentHubConsole
                 var mClient = clientFactory.Client();
 
                 //await GetTotalMigratedFromPath(mClient);
-                await DefaultExecution(mClient);
+                //await DefaultExecution(mClient);
                 //await MissingFileExecution(mClient);
                 //await MissingFileExecutionUsingLogicApp(mClient);
                 //await MigratedAssetsWithNoTypeExecution(mClient, true);
                 //await ReloadAssetsWithZeroFileSizeExecution(mClient);
+                //await MigratedAssetsWithNoAssignedProduct(mClient);
+                await MigratedAssetsWithNoAssignedCatalog(mClient);
 
                 //##################
 
                 //var em = new EntityManager(mClient);
                 //var mig = await em.GetMigratedAssetsWithNoType();
                 //await em.RemoveAssets();
+                //##################
+
+
+                //var em = new ProductManager(mClient);
+                //var mig = await em.GetCatalogs();
+                //foreach (var cat in mig)
+                //{
+                //    Console.WriteLine(cat.Id);
+                //}
                 //##################
 
 
@@ -679,6 +690,96 @@ namespace ContentHubConsole
             FileLogger.Log("Program.MigratedAssetsWithNoTypeExecution", $"Completed {gpm._covetrusAsset.Count}");
         }
 
+        public static async Task MigratedAssetsWithNoAssignedProduct(IWebMClient mClient)
+        {
+            var uploadMgr = new UploadManager(mClient, (string)Configuration["Sandboxes:0:Covetrus"], _contentHubToken);
+            //var directoryPath = ConaEcommMSDSAssetDetailer.UploadPath;
+            //await uploadMgr.UploadLocalDirectory(directoryPath, SearchOption.AllDirectories);
+            //await uploadMgr.UploadLargeFileLocalDirectory();
+
+            var em = new ProductManager(mClient);
+            var mig = await em.GetMigratedAssetsWithAssignedProducts();
+
+            var gpm = new ConaEcommMSDSAssetDetailer(mClient, mig);// uploadMgr.DirectoryFileUploadResponses);
+            await gpm.AssignAssetsToProducts();
+            await gpm.SaveAllAssets();
+
+            if (gpm._failedAssets.Any())
+            {
+                FileLogger.Log("Program.MigratedAssetsWithNoTypeExecution", $"Failed Assets:");
+                ICollection<FileUploadResponse> failedFiles = new List<FileUploadResponse>();
+                foreach (var ff in gpm._failedAssets)
+                {
+                    var uploadFailedFile = await uploadMgr.UploadLocalFile(ff.OriginPath);
+                    failedFiles.Add(uploadFailedFile);
+                }
+
+                var gpmRetry = new ConaEcommMSDSAssetDetailer(mClient, failedFiles);
+                await gpmRetry.UpdateAllAssets();
+                await gpmRetry.SaveAllAssets();
+
+                var ffc = $"Failed files count: {gpmRetry._failedAssets.Count}";
+                Console.WriteLine(ffc);
+                FileLogger.Log("Program.MigratedAssetsWithNoTypeExecution", ffc);
+
+                foreach (var failed in gpmRetry._failedAssets)
+                {
+                    var fp = $"{failed.OriginPath}";
+                    Console.WriteLine(fp);
+                    FileLogger.Log("Program.MigratedAssetsWithNoTypeExecution", fp);
+                    FileLogger.AddToFailedUploadLog(failed.OriginPath);
+                }
+            }
+
+            Console.WriteLine($"Completed {gpm._covetrusAsset.Count}");
+            FileLogger.Log("Program.MigratedAssetsWithNoTypeExecution", $"Completed {gpm._covetrusAsset.Count}");
+        }
+
+        public static async Task MigratedAssetsWithNoAssignedCatalog(IWebMClient mClient)
+        {
+            var uploadMgr = new UploadManager(mClient, (string)Configuration["Sandboxes:0:Covetrus"], _contentHubToken);
+            //var directoryPath = ConaEcommMSDSAssetDetailer.UploadPath;
+            //await uploadMgr.UploadLocalDirectory(directoryPath, SearchOption.AllDirectories);
+            //await uploadMgr.UploadLargeFileLocalDirectory();
+
+            var em = new ProductManager(mClient);
+            var mig = await em.GetMigratedAssetsWithAssignedCatalog();
+
+            var gpm = new ConaEcommMSDSAssetDetailer(mClient, mig);// uploadMgr.DirectoryFileUploadResponses);
+            await gpm.AssignAssetsToCatalog("CONA E-Comm Master Catalog");
+            await gpm.SaveAllAssets();
+
+            if (gpm._failedAssets.Any())
+            {
+                FileLogger.Log("Program.MigratedAssetsWithNoTypeExecution", $"Failed Assets:");
+                ICollection<FileUploadResponse> failedFiles = new List<FileUploadResponse>();
+                foreach (var ff in gpm._failedAssets)
+                {
+                    var uploadFailedFile = await uploadMgr.UploadLocalFile(ff.OriginPath);
+                    failedFiles.Add(uploadFailedFile);
+                }
+
+                var gpmRetry = new ConaEcommMSDSAssetDetailer(mClient, failedFiles);
+                await gpmRetry.UpdateAllAssets();
+                await gpmRetry.SaveAllAssets();
+
+                var ffc = $"Failed files count: {gpmRetry._failedAssets.Count}";
+                Console.WriteLine(ffc);
+                FileLogger.Log("Program.MigratedAssetsWithNoTypeExecution", ffc);
+
+                foreach (var failed in gpmRetry._failedAssets)
+                {
+                    var fp = $"{failed.OriginPath}";
+                    Console.WriteLine(fp);
+                    FileLogger.Log("Program.MigratedAssetsWithNoTypeExecution", fp);
+                    FileLogger.AddToFailedUploadLog(failed.OriginPath);
+                }
+            }
+
+            Console.WriteLine($"Completed {gpm._covetrusAsset.Count}");
+            FileLogger.Log("Program.MigratedAssetsWithNoTypeExecution", $"Completed {gpm._covetrusAsset.Count}");
+        }
+
         private static async Task<List<FileUploadResponse>> GetZeroFiles(IWebMClient mClient)
         {
             var results = new List<FileUploadResponse>();
@@ -708,9 +809,8 @@ namespace ContentHubConsole
 
             var query = Query.CreateQuery(entities =>
                  (from e in entities
-                  where e.Property("OriginPath").Contains("SmartPak") 
-                    && e.Property("OriginPath").Contains("Lifestyle") 
-                    && e.Property("OriginPath").Contains("Themes")
+                  where e.Property("OriginPath").Contains("MASTER FILES") 
+                    && e.Property("Title").StartsWith("P01") 
                     && e.CreatedOn > DateTime.Today.Subtract(TimeSpan.FromDays(1))
                   select e).Skip(0).Take(3000));
             var mq = await mClient.Querying.QueryAsync(query);

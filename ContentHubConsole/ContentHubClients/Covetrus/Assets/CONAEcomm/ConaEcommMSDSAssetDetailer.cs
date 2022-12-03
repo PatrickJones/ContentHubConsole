@@ -73,9 +73,68 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Assets.CONAEcomm
             return results.Count;
         }
 
+        public async Task<long> AssignAssetsToProducts()
+        {
+            var results = new List<long>();
+
+            await _taxonomyManager.LoadAllTaxonomies();
+
+            foreach (var asset in _covetrusAsset)
+            {
+                try
+                {
+                    await asset.LoadAssetMembers();
+                    await AssignToProduct(asset);
+
+                    var log = $"New asset {asset.Asset.Id} from path {asset.OriginPath} assigned to Product";
+                    Console.WriteLine(log);
+                    FileLogger.Log("AssignAssetsToProducts", log);
+                }
+                catch (Exception ex)
+                {
+                    asset.Errors.Add(ex.Message);
+                    _failedAssets.Add(asset);
+                    continue;
+                }
+
+            }
+
+            return results.Count;
+        }
+
+        public async Task<long> AssignAssetsToCatalog(string catalogName)
+        {
+            var results = new List<long>();
+
+            await _taxonomyManager.LoadAllTaxonomies();
+
+            foreach (var asset in _covetrusAsset)
+            {
+                try
+                {
+                    await asset.LoadAssetMembers();
+                    await AssignToCatalogue(asset, catalogName);
+
+                    var log = $"New asset {asset.Asset.Id} from path {asset.OriginPath} assigned to Catalog {catalogName}";
+                    Console.WriteLine(log);
+                    FileLogger.Log("AssignAssetsToCatalog", log);
+                }
+                catch (Exception ex)
+                {
+                    asset.Errors.Add(ex.Message);
+                    _failedAssets.Add(asset);
+                    continue;
+                }
+
+            }
+
+            return results.Count;
+        }
+
+
         public override string RemoveLocalPathPart(string originPath)
         {
-            var pathSplit = Program.IsVirtualMachine ? originPath.Split('\\').Skip(1).ToArray() : originPath.Split('\\').Skip(5).ToArray();
+            var pathSplit = Program.IsVirtualMachine ? originPath.Split('\\').Skip(5).ToArray() : originPath.Split('\\').Skip(5).ToArray();
             var result = new StringBuilder();
 
             for (int i = 0; i < pathSplit.Length; i++)

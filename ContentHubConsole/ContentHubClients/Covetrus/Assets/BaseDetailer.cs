@@ -119,7 +119,7 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Assets
             if (filename.StartsWith("P") && filename.EndsWith(".pdf"))
             {
                 var split = filename.Split('.');
-                var productId = split[0].Replace("P", "");
+                var productId = split[0].Replace("P", "").Substring(0,6);
 
                 var products = await _productManager.GetProductByNumber(productId);
 
@@ -131,6 +131,30 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Assets
                     }
                 }
             }
+
+            if (filename.StartsWith("V") && filename.EndsWith(".pdf"))
+            {
+                var split = filename.Split('.');
+                var productId = split[0].Replace("V", "").Substring(0, 6);
+
+                var products = await _productManager.GetProductByNumber(productId);
+
+                if (products.Count > 0)
+                {
+                    foreach (var p in products)
+                    {
+                        asset.AddChildToManyParentsRelation(p.Id.Value, RelationNames.RELATION_PRODUCT_TOASSET);
+                    }
+                }
+            }
+        }
+
+        internal async Task AssignToCatalogue(CovetrusAsset asset, string catalogName)
+        {
+            var catalolgs = await _productManager.GetCatalogs();
+            var catalogId = catalolgs.Where(w => w.GetPropertyValue<string>("CatalogName") == catalogName).Select(s => s.Id.Value).FirstOrDefault();
+
+            asset.AddChildToManyParentsRelation(catalogId, RelationNames.RELATION_CATALOG_TOASSET);
         }
 
         #region Set Asset Usages
