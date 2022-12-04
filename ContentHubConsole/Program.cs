@@ -159,13 +159,13 @@ namespace ContentHubConsole
                 var mClient = clientFactory.Client();
 
                 //await GetTotalMigratedFromPath(mClient);
-                //await DefaultExecution(mClient);
+                await DefaultExecution(mClient);
                 //await MissingFileExecution(mClient);
                 //await MissingFileExecutionUsingLogicApp(mClient);
                 //await MigratedAssetsWithNoTypeExecution(mClient, true);
                 //await ReloadAssetsWithZeroFileSizeExecution(mClient);
                 //await MigratedAssetsWithNoAssignedProduct(mClient);
-                await MigratedAssetsWithNoAssignedCatalog(mClient);
+                //await MigratedAssetsWithNoAssignedCatalog(mClient);
 
                 //##################
 

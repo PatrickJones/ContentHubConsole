@@ -10,6 +10,8 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Assets.CONAEcomm
 {
     public class ConaEcommProductAssetDetailer : BaseDetailer
     {
+        private const string CONA_CATALOG_NAME = "CONA E-Comm Master Catalog";
+
         public ConaEcommProductAssetDetailer(IWebMClient webMClient, ICollection<FileUploadResponse> fileUploadResponses) : base(webMClient, fileUploadResponses)
         {
         }
@@ -38,22 +40,26 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Assets.CONAEcomm
 
                     await AddTagFromPath(asset);
 
-                    SetStockImages(asset);
-                    SetProductUsage(asset);
+                    await AssignToProduct(asset);
+                    await AssignToCatalogue(asset, CONA_CATALOG_NAME);
+
+                    SetManufacturerOrigianl(asset);
+                    //SetStockImages(asset);
+                    //SetProductUsage(asset);
                     //SetOffsite(asset);
                     //SetOnsite(asset);
                     //SetWebpage(asset);
-                    SetUsages(asset);
-                    SetSeason(asset);
-                    SetAdvertising(asset);
+                    //SetUsages(asset);
+                    //SetSeason(asset);
+                    //SetAdvertising(asset);
                     //await AddBrandFromPath(asset);
 
-                    SetYear(asset);
-                    SetSpecificYear(asset);
-                    SetMonth(asset);
-                    SetWeek(asset);
+                    //SetYear(asset);
+                    //SetSpecificYear(asset);
+                    //SetMonth(asset);
+                    //SetWeek(asset);
 
-                    UpdateAssetType(asset);
+                    //UpdateAssetType(asset);
 
                     var log = $"New asset {asset.Asset.Id} from path {asset.OriginPath}";
                     Console.WriteLine(log);
@@ -69,6 +75,11 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Assets.CONAEcomm
             }
 
             return results.Count;
+        }
+
+        private void SetManufacturerOrigianl(CovetrusAsset asset)
+        {
+            throw new NotImplementedException();
         }
 
         public override string RemoveLocalPathPart(string originPath)

@@ -23,6 +23,7 @@ namespace ContentHubConsole.Assets
         public IEntity Asset = null;
 
         public const string PROPERTY_DESCRIPTION = "Description";
+        public const string MANUFACTURER_ORIGINAL = "IsManufacturerOriginal";
         public readonly string OriginPath = String.Empty;
 
         public List<string> Errors = new List<string>();
@@ -68,6 +69,21 @@ namespace ContentHubConsole.Assets
                 FileLogger.Log("SaveAsset", e);
                 Errors.Add(e);
                 return result;
+            }
+        }
+
+        public void MarkAsManufacturerOriginal()
+        {
+            try
+            {
+                Asset.SetPropertyValue(MANUFACTURER_ORIGINAL,true);
+            }
+            catch (Exception ex)
+            {
+                var e = $"MarkAsManufacturerOriginal: {ex.Message}";
+                Console.WriteLine(e);
+                FileLogger.Log("MarkAsManufacturerOriginal", e);
+                Errors.Add(e);
             }
         }
 

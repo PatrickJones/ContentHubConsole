@@ -11,6 +11,8 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Assets.CONAEcomm
 {
     public class ConaEcommMSDSAssetDetailer : BaseDetailer
     {
+        private const string CONA_CATALOG_NAME = "CONA E-Comm Master Catalog";
+
         public ConaEcommMSDSAssetDetailer(IWebMClient webMClient, ICollection<FileUploadResponse> fileUploadResponses) : base(webMClient, fileUploadResponses)
         {
         }
@@ -40,6 +42,7 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Assets.CONAEcomm
                     await AddTagFromPath(asset);
 
                     await AssignToProduct(asset);
+                    await AssignToCatalogue(asset, CONA_CATALOG_NAME);
                     //SetStockImages(asset);
                     //SetProductUsage(asset);
                     //SetOffsite(asset);

@@ -220,6 +220,18 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Assets
             }
         }
 
+        internal void SetManufacturerOrigianl(CovetrusAsset asset)
+        {
+            var filename = asset.Asset.GetPropertyValue<string>("Filename");
+            if (asset.OriginPath.Contains("MASTER FILES") && asset.OriginPath.Contains("Product_Images")) //CONA Ecomm
+            {
+                if (!filename.EndsWith("eps") || !filename.EndsWith("jpg") || !filename.EndsWith("jpeg"))
+                {
+                    asset.MarkAsManufacturerOriginal();
+                }
+            }
+        }
+
         internal void SetAdvertising(CovetrusAsset asset)
         {
             if (asset.OriginPath.Contains("Advertising") || asset.OriginPath.Contains("Advertise"))
