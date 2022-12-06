@@ -43,7 +43,7 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Assets.CONAEcomm
                     await AssignToProduct(asset);
                     await AssignToCatalogue(asset, CONA_CATALOG_NAME);
 
-                    SetManufacturerOrigianl(asset);
+                    SetManufacturerOriginal(asset);
                     //SetStockImages(asset);
                     //SetProductUsage(asset);
                     //SetOffsite(asset);
@@ -77,9 +77,15 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Assets.CONAEcomm
             return results.Count;
         }
 
-        private void SetManufacturerOrigianl(CovetrusAsset asset)
+        private void SetManufacturerOriginal(CovetrusAsset asset)
         {
-            throw new NotImplementedException();
+            var filename = asset.Asset.GetPropertyValue<string>("Filename");
+            if (filename.EndsWith("eps") || filename.EndsWith("png"))
+            {
+                return;
+            }
+
+            asset.MarkAsManufacturerOriginal();
         }
 
         public override string RemoveLocalPathPart(string originPath)

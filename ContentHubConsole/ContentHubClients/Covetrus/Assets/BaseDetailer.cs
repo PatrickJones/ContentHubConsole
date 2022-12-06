@@ -147,6 +147,22 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Assets
                     }
                 }
             }
+
+            if (asset.OriginPath.Contains("Product_Images") && filename.StartsWith("V"))
+            {
+                var split = filename.Split('.');
+                var productId = split[0].Replace("V", "").Substring(0, 6);
+
+                var products = await _productManager.GetProductByNumber(productId);
+
+                if (products.Count > 0)
+                {
+                    foreach (var p in products)
+                    {
+                        asset.AddChildToManyParentsRelation(p.Id.Value, RelationNames.RELATION_PRODUCT_TOASSET);
+                    }
+                }
+            }
         }
 
         internal async Task AssignToCatalogue(CovetrusAsset asset, string catalogName)
