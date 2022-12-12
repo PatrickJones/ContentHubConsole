@@ -26,6 +26,7 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Assets
 
         internal ICollection<CovetrusAsset> _covetrusAsset = new List<CovetrusAsset>();
         internal ICollection<CovetrusAsset> _failedAssets = new List<CovetrusAsset>();
+        internal long ActuallySaved = 0;
 
         public static readonly string UploadPath = Program.OriginFolder;
 
@@ -58,6 +59,7 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Assets
                 tasks.Add(asset.SaveAsset());
             }
 
+            ActuallySaved = tasks.Count;
             await tasks.WhenAll();
         }
 
@@ -540,43 +542,43 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Assets
         public virtual long GetYearIdFromPath(string originPath)
         {
             var pathSplit = originPath.Split('\\');
-            if (pathSplit.Any(a => a.Equals("2019")))
+            if (pathSplit.Any(a => a.Contains("2019")))
             {
                 var tax = _taxonomyManager.YearEntities.Where(w => w.Identifier.Contains("2019")).FirstOrDefault();
                 return tax.Id.Value;
             }
 
-            if (pathSplit.Any(a => a.Equals("2020")))
+            if (pathSplit.Any(a => a.Contains("2020")))
             {
                 var tax = _taxonomyManager.YearEntities.Where(w => w.Identifier.Contains("2020")).FirstOrDefault();
                 return tax.Id.Value;
             }
 
-            if (pathSplit.Any(a => a.Equals("2021")))
+            if (pathSplit.Any(a => a.Contains("2021")))
             {
                 var tax = _taxonomyManager.YearEntities.Where(w => w.Identifier.Contains("2021")).FirstOrDefault();
                 return tax.Id.Value;
             }
 
-            if (pathSplit.Any(a => a.Equals("2022")))
+            if (pathSplit.Any(a => a.Contains("2022")))
             {
                 var tax = _taxonomyManager.YearEntities.Where(w => w.Identifier.Contains("2022")).FirstOrDefault();
                 return tax.Id.Value;
             }
 
-            if (pathSplit.Any(a => a.Equals("2023")))
+            if (pathSplit.Any(a => a.Contains("2023")))
             {
                 var tax = _taxonomyManager.YearEntities.Where(w => w.Identifier.Contains("2023")).FirstOrDefault();
                 return tax.Id.Value;
             }
 
-            if (pathSplit.Any(a => a.Equals("2024")))
+            if (pathSplit.Any(a => a.Contains("2024")))
             {
                 var tax = _taxonomyManager.YearEntities.Where(w => w.Identifier.Contains("2024")).FirstOrDefault();
                 return tax.Id.Value;
             }
 
-            if (pathSplit.Any(a => a.Equals("2025")))
+            if (pathSplit.Any(a => a.Contains("2025")))
             {
                 var tax = _taxonomyManager.YearEntities.Where(w => w.Identifier.Contains("2025")).FirstOrDefault();
                 return tax.Id.Value;

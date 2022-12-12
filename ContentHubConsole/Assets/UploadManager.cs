@@ -1,4 +1,5 @@
 ﻿using Azure;
+using Microsoft.VisualBasic.FileIO;
 using Stylelabs.M.Base.Querying;
 using Stylelabs.M.Base.Querying.Linq;
 using Stylelabs.M.Sdk.WebClient;
@@ -11,6 +12,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Tavis.UriTemplates;
+using SearchOption = System.IO.SearchOption;
 
 namespace ContentHubConsole.Assets
 {
@@ -35,6 +37,63 @@ namespace ContentHubConsole.Assets
         {
             _contentHubUrl = contentHubUrl;
             _contentHubToken = token;
+        }
+
+        public async Task UploadMissingFiles(List<FileUploadResponse> fileUploadResponses)
+        {
+            Console.WriteLine($"Uploading mising files");
+            FileLogger.Log("UploadMissingFiles", $"Uploading mising files");
+
+            try
+            {
+                var uploadTasks = new List<Task>();
+
+                foreach (var file in fileUploadResponses)
+                {
+                    try
+                    {
+                        var fileInfo = new FileInfo(file.LocalPath);
+                        if (fileInfo.Length > MAX_FILE_SIZE_BYTES)
+                        {
+                            _largeFilePaths.Add(file.LocalPath);
+                        }
+                        else
+                        {
+                            uploadTasks.Add(UploadLocalFile(file.LocalPath));
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        DirectoryFileUploadResponses.Add(new FileUploadResponse(0, file.LocalPath));
+
+                        Console.WriteLine(ex.Message);
+                        FileLogger.Log("UploadMissingFiles", ex.Message);
+                        continue;
+                    }
+                }
+
+                await Task.WhenAll(uploadTasks);
+
+                try
+                {
+                    foreach (var task in uploadTasks)
+                    {
+                        var result = ((Task<FileUploadResponse>)task).Result;
+                        DirectoryFileUploadResponses.Add(result);
+                    }
+                }
+                catch { }
+
+                var log = $"Done uploading missing files. Count {DirectoryFileUploadResponses.Where(w => w.AssetId > 0).Count()}";
+                Console.WriteLine(log);
+                FileLogger.Log("UploadLocalDirectory", log);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                FileLogger.Log("UploadLocalDirectory", ex.Message);
+            }
+
         }
 
         public async Task<FileUploadResponse> UploadLocalFile(string path)
@@ -407,8 +466,11 @@ namespace ContentHubConsole.Assets
                 _ when extension.Equals(".tiff", StringComparison.InvariantCultureIgnoreCase) => "image/tiff",
                 _ when extension.Equals(".tif", StringComparison.InvariantCultureIgnoreCase) => "image/tiff",
                 _ when extension.Equals(".ttf", StringComparison.InvariantCultureIgnoreCase) => "font/ttf",
+                _ when extension.Equals(".ttc", StringComparison.InvariantCultureIgnoreCase) => "font/ttc",
+                _ when extension.Equals(".lst", StringComparison.InvariantCultureIgnoreCase) => "text/plain",
                 _ when extension.Equals(".mp4", StringComparison.InvariantCultureIgnoreCase) => "video/mp4",
                 _ when extension.Equals(".mov", StringComparison.InvariantCultureIgnoreCase) => "video/quicktime",
+                _ when extension.Equals(".m4v", StringComparison.InvariantCultureIgnoreCase) => "video/x-m4v",
                 _ when extension.Equals(".zip", StringComparison.InvariantCultureIgnoreCase) => "application/zip",
                 _ when extension.Equals(".pdf", StringComparison.InvariantCultureIgnoreCase) => "application/pdf",
                 _ when extension.Equals(".json", StringComparison.InvariantCultureIgnoreCase) => "application/json",
@@ -416,13 +478,21 @@ namespace ContentHubConsole.Assets
                 _ when extension.Equals(".rar", StringComparison.InvariantCultureIgnoreCase) => "application/x-rar-compressed",
                 _ when extension.Equals(".gzip", StringComparison.InvariantCultureIgnoreCase) => "application/x-gzip",
                 _ when extension.Equals(".ps1", StringComparison.InvariantCultureIgnoreCase) => "text/plain",
+                _ when extension.Equals(".csv", StringComparison.InvariantCultureIgnoreCase) => "text/plain",
                 _ when extension.Equals(".psd", StringComparison.InvariantCultureIgnoreCase) => "image/vnd.adobe.photoshop",
                 _ when extension.Equals(".js", StringComparison.InvariantCultureIgnoreCase) => "text/javascript",
+                _ when extension.Equals(".xlsx", StringComparison.InvariantCultureIgnoreCase) => "application/vnd.ms-excel",
                 _ when extension.Equals(".html", StringComparison.InvariantCultureIgnoreCase) => "text/html",
                 _ when extension.Equals(".ai", StringComparison.InvariantCultureIgnoreCase) => "application/postscript",
                 _ when extension.Equals(".eps", StringComparison.InvariantCultureIgnoreCase) => "application/postscript",
-                _ when extension.Equals(".indd", StringComparison.InvariantCultureIgnoreCase) => " application/x-indesign",
+                _ when extension.Equals(".indd", StringComparison.InvariantCultureIgnoreCase) => "application/x-indesign",
+                _ when extension.Equals(".idml", StringComparison.InvariantCultureIgnoreCase) => "application/vnd.adobe.indesign-idml-package",
                 _ when extension.Equals(".jpf", StringComparison.InvariantCultureIgnoreCase) => "image/x-jpf",
+                _ when extension.Equals(".cr2", StringComparison.InvariantCultureIgnoreCase) => "image/x-dcraw",
+                _ when extension.Equals(".svg", StringComparison.InvariantCultureIgnoreCase) => "image/svg+xml",
+                _ when extension.Equals(".sketch", StringComparison.InvariantCultureIgnoreCase) => "application/sketch",
+                _ when extension.Equals(".fig", StringComparison.InvariantCultureIgnoreCase) => "application/fig",
+                _ when extension.Equals(".pptx", StringComparison.InvariantCultureIgnoreCase) => "application/vnd.openxmlformats-officedocument.presentationml.presentation",
                 _ => throw new NotImplementedException()
             };
         }

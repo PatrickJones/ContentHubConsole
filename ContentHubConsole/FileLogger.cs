@@ -18,41 +18,53 @@ namespace ContentHubConsole
 
         public static void Log(string source, string message, bool append = true)
         {
-            string text = $"Source: {source} - {message}";
+            try
+            {
+                string text = $"Source: {source} - {message}";
 
-            string executableLocation = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string location = Path.Combine(executableLocation, $"{_logFileName}.txt");
+                string executableLocation = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+                string location = Path.Combine(executableLocation, $"{_logFileName}.txt");
 
-            using StreamWriter file = new(location, append);
-            file.WriteLine(text);
+                using StreamWriter file = new(location, append);
+                file.WriteLine(text);
+            }
+            catch (Exception ex)
+            {
+            }
         }
 
         public static void AddToFailedUploadLog(string filePath)
         {
-            var existingPaths = new List<string>();
-
-            StreamReader reader = null;
-            if (File.Exists(Program.FileLoggerLocation))
+            try
             {
-                reader = new StreamReader(File.OpenRead(Program.FileLoggerLocation));
-                while (!reader.EndOfStream)
+                var existingPaths = new List<string>();
+
+                StreamReader reader = null;
+                if (File.Exists(Program.FileLoggerLocation))
                 {
-                    var line = reader.ReadLine();
-                    existingPaths.Add(line);
+                    reader = new StreamReader(File.OpenRead(Program.FileLoggerLocation));
+                    while (!reader.EndOfStream)
+                    {
+                        var line = reader.ReadLine();
+                        existingPaths.Add(line);
+                    }
+
+                    reader.Close();
+                    reader.Dispose();
+                }
+                else
+                {
+                    Console.WriteLine("File doesn't exist");
                 }
 
-                reader.Close();
-                reader.Dispose();
+                if (!existingPaths.Any(a => a.Equals(filePath)))
+                {
+                    using StreamWriter file = new(Program.FileLoggerLocation, append: true);
+                    file.WriteLine(filePath);
+                }
             }
-            else
+            catch (Exception)
             {
-                Console.WriteLine("File doesn't exist");
-            }
-
-            if (!existingPaths.Any(a => a.Equals(filePath)))
-            {
-                using StreamWriter file = new(Program.FileLoggerLocation, append: true);
-                file.WriteLine(filePath);
             }
         }
     }

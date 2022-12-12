@@ -62,6 +62,7 @@ using System.Text.Json;
 using ContentHubConsole.AzureFunctions;
 using static System.Net.WebRequestMethods;
 using ContentHubConsole.ContentHubClients.Covetrus.Assets.CONAEcomm;
+using ContentHubConsole.ContentHubClients.Covetrus.Assets.CONACC;
 
 namespace ContentHubConsole
 {
@@ -167,7 +168,7 @@ namespace ContentHubConsole
                 //await MigratedAssetsWithNoAssignedProduct(mClient);
                 //await MigratedAssetsWithNoAssignedCatalog(mClient);
 
-                //##################
+                //################## 
 
                 //var em = new EntityManager(mClient);
                 //var mig = await em.GetMigratedAssetsWithNoType();
@@ -353,43 +354,43 @@ namespace ContentHubConsole
         public static async Task DefaultExecution(IWebMClient mClient)
         {
             var uploadMgr = new UploadManager(mClient, (string)Configuration["Sandboxes:0:Covetrus"], _contentHubToken);
-            var directoryPath = ConaEcommProductAssetDetailer.UploadPath;
+            var directoryPath = ConaCCCatTBSAssetDetailer.UploadPath;
             await uploadMgr.UploadLocalDirectory(directoryPath, SearchOption.AllDirectories);
             await uploadMgr.UploadLargeFileLocalDirectory();
 
-            var gpm = new ConaEcommProductAssetDetailer(mClient, uploadMgr.DirectoryFileUploadResponses);
+            var gpm = new ConaCCCatTBSAssetDetailer(mClient, uploadMgr.DirectoryFileUploadResponses);
             await gpm.UpdateAllAssets();
             await gpm.SaveAllAssets();
 
-            if (gpm._failedAssets.Any())
-            {
-                FileLogger.Log("Program.DefaultExecution", $"Failed Assets:");
-                ICollection<FileUploadResponse> failedFiles = new List<FileUploadResponse>();
-                foreach (var ff in gpm._failedAssets)
-                {
-                    var uploadFailedFile = await uploadMgr.UploadLocalFile(ff.OriginPath);
-                    failedFiles.Add(uploadFailedFile);
-                }
+            //if (gpm._failedAssets.Any())
+            //{
+            //    FileLogger.Log("Program.DefaultExecution", $"Failed Assets:");
+            //    ICollection<FileUploadResponse> failedFiles = new List<FileUploadResponse>();
+            //    foreach (var ff in gpm._failedAssets)
+            //    {
+            //        var uploadFailedFile = await uploadMgr.UploadLocalFile(ff.OriginPath);
+            //        failedFiles.Add(uploadFailedFile);
+            //    }
 
-                var gpmRetry = new ConaEcommProductAssetDetailer(mClient, failedFiles);
-                await gpmRetry.UpdateAllAssets();
-                await gpmRetry.SaveAllAssets();
+            //    var gpmRetry = new ConaCCCatTBSAssetDetailer(mClient, failedFiles);
+            //    await gpmRetry.UpdateAllAssets();
+            //    await gpmRetry.SaveAllAssets();
 
-                var ffc = $"Failed files count: {gpmRetry._failedAssets.Count}";
-                Console.WriteLine(ffc);
-                FileLogger.Log("Program.DefaultExecution", ffc);
+            //    var ffc = $"Failed files count: {gpmRetry._failedAssets.Count}";
+            //    Console.WriteLine(ffc);
+            //    FileLogger.Log("Program.DefaultExecution", ffc);
 
-                foreach (var failed in gpmRetry._failedAssets)
-                {
-                    var fp = $"{failed.OriginPath}";
-                    Console.WriteLine(fp);
-                    FileLogger.Log("Program.DefaultExecution", fp);
-                    FileLogger.AddToFailedUploadLog(failed.OriginPath);
-                }
-            }
+            //    foreach (var failed in gpmRetry._failedAssets)
+            //    {
+            //        var fp = $"{failed.OriginPath}";
+            //        Console.WriteLine(fp);
+            //        FileLogger.Log("Program.DefaultExecution", fp);
+            //        FileLogger.AddToFailedUploadLog(failed.OriginPath);
+            //    }
+            //}
 
-            Console.WriteLine($"Completed {gpm._covetrusAsset.Count}");
-            FileLogger.Log("Program", $"Completed {gpm._covetrusAsset.Count}");
+            Console.WriteLine($"Completed {gpm.ActuallySaved}");
+            FileLogger.Log("Program", $"Completed {gpm.ActuallySaved}");
         }
 
         public static async Task MissingFileExecution(IWebMClient mClient)
@@ -401,39 +402,42 @@ namespace ContentHubConsole
             Console.WriteLine($"Missing file count: {uploads.Count}");
             FileLogger.Log("Program.GetMissingFiles.", $"Missing file count: {uploads.Count}");
 
-            var gpm = new ConaEcommProductAssetDetailer(mClient, uploads);
+            await uploadMgr.UploadMissingFiles(uploads);
+            await uploadMgr.UploadLargeFileLocalDirectory();
+
+            var gpm = new ConaCCCatTBSAssetDetailer(mClient, uploadMgr.DirectoryFileUploadResponses);
             await gpm.UpdateAllAssets();
             await gpm.SaveAllAssets();
 
-            if (gpm._failedAssets.Any())
-            {
-                FileLogger.Log("Program.GetMissingFiles", $"Failed Assets:");
-                ICollection<FileUploadResponse> failedFiles = new List<FileUploadResponse>();
-                foreach (var ff in gpm._failedAssets)
-                {
-                    var uploadFailedFile = await uploadMgr.UploadLocalFile(ff.OriginPath);
-                    failedFiles.Add(uploadFailedFile);
-                }
+            //if (gpm._failedAssets.Any())
+            //{
+            //    FileLogger.Log("Program.GetMissingFiles", $"Failed Assets:");
+            //    ICollection<FileUploadResponse> failedFiles = new List<FileUploadResponse>();
+            //    foreach (var ff in gpm._failedAssets)
+            //    {
+            //        var uploadFailedFile = await uploadMgr.UploadLocalFile(ff.OriginPath);
+            //        failedFiles.Add(uploadFailedFile);
+            //    }
 
-                var gpmRetry = new ConaEcommProductAssetDetailer(mClient, failedFiles);
-                await gpmRetry.UpdateAllAssets();
-                await gpmRetry.SaveAllAssets();
+            //    var gpmRetry = new ConaCCCatTBSAssetDetailer(mClient, failedFiles);
+            //    await gpmRetry.UpdateAllAssets();
+            //    await gpmRetry.SaveAllAssets();
 
-                var ffc = $"Failed files count: {gpmRetry._failedAssets.Count}";
-                Console.WriteLine(ffc);
-                FileLogger.Log("Program.GetMissingFiles", ffc);
+            //    var ffc = $"Failed files count: {gpmRetry._failedAssets.Count}";
+            //    Console.WriteLine(ffc);
+            //    FileLogger.Log("Program.GetMissingFiles", ffc);
 
-                foreach (var failed in gpmRetry._failedAssets)
-                {
-                    var fp = $"{failed.OriginPath}";
-                    Console.WriteLine(fp);
-                    FileLogger.Log("Program.GetMissingFiles", fp);
-                    FileLogger.AddToFailedUploadLog(failed.OriginPath);
-                }
-            }
+            //    foreach (var failed in gpmRetry._failedAssets)
+            //    {
+            //        var fp = $"{failed.OriginPath}";
+            //        Console.WriteLine(fp);
+            //        FileLogger.Log("Program.GetMissingFiles", fp);
+            //        FileLogger.AddToFailedUploadLog(failed.OriginPath);
+            //    }
+            //}
 
-            Console.WriteLine($"Completed {gpm._covetrusAsset.Count}");
-            FileLogger.Log("Program.GetMissingFiles", $"Completed {gpm._covetrusAsset.Count}");
+            Console.WriteLine($"Completed {gpm.ActuallySaved}");
+            FileLogger.Log("Program.GetMissingFiles", $"Completed {gpm.ActuallySaved}");
         }
 
         public static async Task MissingFileExecutionUsingLogicApp(IWebMClient mClient)
@@ -607,7 +611,7 @@ namespace ContentHubConsole
 
             }
 
-            var gpm = new ConaEcommProductAssetDetailer(mClient, uploads);
+            var gpm = new ConaCCCatTBSAssetDetailer(mClient, uploads);
             await gpm.UpdateAllAssets();
             await gpm.SaveAllAssets();
 
@@ -636,7 +640,7 @@ namespace ContentHubConsole
         public static async Task ReloadAssetsWithZeroFileSizeExecution(IWebMClient mClient)
         {
             var uploadMgr = new UploadManager(mClient, (string)Configuration["Sandboxes:0:Covetrus"], _contentHubToken);
-            //var directoryPath = ConaEcommProductAssetDetailer.UploadPath;
+            //var directoryPath = ConaCCCatTBSAssetDetailer.UploadPath;
             var uploads = await GetZeroFiles(mClient);
             await uploadMgr.UploadLocalDirectoryVersions(uploads);
             await uploadMgr.UploadLargeFileLocalDirectoryVersions();
@@ -648,52 +652,52 @@ namespace ContentHubConsole
         public static async Task MigratedAssetsWithNoTypeExecution(IWebMClient mClient, bool checkOriginPath)
         {
             var uploadMgr = new UploadManager(mClient, (string)Configuration["Sandboxes:0:Covetrus"], _contentHubToken);
-            //var directoryPath = ConaEcommProductAssetDetailer.UploadPath;
+            //var directoryPath = ConaCCCatTBSAssetDetailer.UploadPath;
             //await uploadMgr.UploadLocalDirectory(directoryPath, SearchOption.AllDirectories);
             //await uploadMgr.UploadLargeFileLocalDirectory();
 
             var em = new EntityManager(mClient);
             var mig = await em.GetMigratedAssetsWithNoType(checkOriginPath);
 
-            var gpm = new ConaEcommProductAssetDetailer(mClient, mig);// uploadMgr.DirectoryFileUploadResponses);
+            var gpm = new ConaCCCatTBSAssetDetailer(mClient, mig);// uploadMgr.DirectoryFileUploadResponses);
             await gpm.UpdateAllAssets();
             await gpm.SaveAllAssets();
 
-            if (gpm._failedAssets.Any())
-            {
-                FileLogger.Log("Program.MigratedAssetsWithNoTypeExecution", $"Failed Assets:");
-                ICollection<FileUploadResponse> failedFiles = new List<FileUploadResponse>();
-                foreach (var ff in gpm._failedAssets)
-                {
-                    var uploadFailedFile = await uploadMgr.UploadLocalFile(ff.OriginPath);
-                    failedFiles.Add(uploadFailedFile);
-                }
+            //if (gpm._failedAssets.Any())
+            //{
+            //    FileLogger.Log("Program.MigratedAssetsWithNoTypeExecution", $"Failed Assets:");
+            //    ICollection<FileUploadResponse> failedFiles = new List<FileUploadResponse>();
+            //    foreach (var ff in gpm._failedAssets)
+            //    {
+            //        var uploadFailedFile = await uploadMgr.UploadLocalFile(ff.OriginPath);
+            //        failedFiles.Add(uploadFailedFile);
+            //    }
 
-                var gpmRetry = new ConaEcommProductAssetDetailer(mClient, failedFiles);
-                await gpmRetry.UpdateAllAssets();
-                await gpmRetry.SaveAllAssets();
+            //    var gpmRetry = new ConaCCCatTBSAssetDetailer(mClient, failedFiles);
+            //    await gpmRetry.UpdateAllAssets();
+            //    await gpmRetry.SaveAllAssets();
 
-                var ffc = $"Failed files count: {gpmRetry._failedAssets.Count}";
-                Console.WriteLine(ffc);
-                FileLogger.Log("Program.MigratedAssetsWithNoTypeExecution", ffc);
+            //    var ffc = $"Failed files count: {gpmRetry._failedAssets.Count}";
+            //    Console.WriteLine(ffc);
+            //    FileLogger.Log("Program.MigratedAssetsWithNoTypeExecution", ffc);
 
-                foreach (var failed in gpmRetry._failedAssets)
-                {
-                    var fp = $"{failed.OriginPath}";
-                    Console.WriteLine(fp);
-                    FileLogger.Log("Program.MigratedAssetsWithNoTypeExecution", fp);
-                    FileLogger.AddToFailedUploadLog(failed.OriginPath);
-                }
-            }
+            //    foreach (var failed in gpmRetry._failedAssets)
+            //    {
+            //        var fp = $"{failed.OriginPath}";
+            //        Console.WriteLine(fp);
+            //        FileLogger.Log("Program.MigratedAssetsWithNoTypeExecution", fp);
+            //        FileLogger.AddToFailedUploadLog(failed.OriginPath);
+            //    }
+            //}
 
-            Console.WriteLine($"Completed {gpm._covetrusAsset.Count}");
-            FileLogger.Log("Program.MigratedAssetsWithNoTypeExecution", $"Completed {gpm._covetrusAsset.Count}");
+            Console.WriteLine($"Completed {gpm.ActuallySaved}");
+            FileLogger.Log("Program.MigratedAssetsWithNoTypeExecution", $"Completed {gpm.ActuallySaved}");
         }
 
         public static async Task MigratedAssetsWithNoAssignedProduct(IWebMClient mClient)
         {
             var uploadMgr = new UploadManager(mClient, (string)Configuration["Sandboxes:0:Covetrus"], _contentHubToken);
-            //var directoryPath = ConaEcommProductAssetDetailer.UploadPath;
+            //var directoryPath = ConaCCCatTBSAssetDetailer.UploadPath;
             //await uploadMgr.UploadLocalDirectory(directoryPath, SearchOption.AllDirectories);
             //await uploadMgr.UploadLargeFileLocalDirectory();
 
@@ -738,7 +742,7 @@ namespace ContentHubConsole
         public static async Task MigratedAssetsWithNoAssignedCatalog(IWebMClient mClient)
         {
             var uploadMgr = new UploadManager(mClient, (string)Configuration["Sandboxes:0:Covetrus"], _contentHubToken);
-            //var directoryPath = ConaEcommProductAssetDetailer.UploadPath;
+            //var directoryPath = ConaCCCatTBSAssetDetailer.UploadPath;
             //await uploadMgr.UploadLocalDirectory(directoryPath, SearchOption.AllDirectories);
             //await uploadMgr.UploadLargeFileLocalDirectory();
 
@@ -786,14 +790,14 @@ namespace ContentHubConsole
 
             var query = Query.CreateQuery(entities =>
                  (from e in entities
-                  where e.Property("OriginPath").Contains("SmartPak") 
-                    && e.Property("OriginPath").Contains("Lifestyle") 
-                    && e.Property("OriginPath").Contains("Riding") 
+                  where e.Property("OriginPath").Contains("Categories") 
+                    && e.Property("OriginPath").Contains("CS")
+                    && e.CreatedOn > DateTime.Today.AddDays(-1)
                     && e.Property("Filesize") == 0
-                  select e).Skip(0).Take(1000)); ;
+                  select e).Skip(0).Take(3000)); ;
             var mq = await mClient.Querying.QueryAsync(query);
             var items = mq.Items.ToList();
-            var zeroFiles = IsVirtualMachine ? items.Select(s => new { Id = s.Id.Value, Filename = $@"E:{(string)s.GetPropertyValue("OriginPath")}" }).ToList() : items.Select(s => new { Id = s.Id.Value, Filename = $@"C:\Users\ptjhi{(string)s.GetPropertyValue("OriginPath")}" }).ToList();
+            var zeroFiles = IsVirtualMachine ? items.Select(s => new { Id = s.Id.Value, Filename = $@"E:\Dropbox (Covetrus){(string)s.GetPropertyValue("OriginPath")}" }).ToList() : items.Select(s => new { Id = s.Id.Value, Filename = $@"C:\Users\ptjhi{(string)s.GetPropertyValue("OriginPath")}" }).ToList();
 
             foreach (var zFfile in zeroFiles)
             {
@@ -809,29 +813,33 @@ namespace ContentHubConsole
 
             var query = Query.CreateQuery(entities =>
                  (from e in entities
-                  where e.Property("OriginPath").Contains("MASTER FILES") 
-                    && e.Property("Title").StartsWith("P01") 
-                    && e.CreatedOn > DateTime.Today.Subtract(TimeSpan.FromDays(1))
-                  select e).Skip(0).Take(3000));
+                  where e.Property("OriginPath").Contains("Categories") 
+                    && e.Property("OriginPath").Contains("DG")
+                    && e.CreatedOn > DateTime.Today.AddDays(-1)
+                  select e).Skip(0).Take(1300));
             var mq = await mClient.Querying.QueryAsync(query);
             var items = mq.Items.ToList();
             var qFilenames = items.Select(s => (string)s.GetPropertyValue("Filename")).ToList();
-           // var qOriginPaths = items.Select(s => (string)s.GetPropertyValue("OriginPath")).ToList();
 
             var directoryPath = OriginFolder;
             var files = Directory.GetFiles(directoryPath, "*.*", System.IO.SearchOption.AllDirectories);
             foreach (var file in files.Distinct())
             {
                 var fileInfo = new FileInfo(file);
-                if (!qFilenames.Any(a => a.Equals(fileInfo.Name, StringComparison.InvariantCultureIgnoreCase)))
+                filenames.Add(fileInfo.FullName, fileInfo.Name);
+            }
+
+            foreach (var chFile in qFilenames)
+            {
+                var keyToRemove = filenames.Where(w => w.Value == chFile).Select(s => s.Key).FirstOrDefault();
+                if (!String.IsNullOrEmpty(keyToRemove))
                 {
-                    filenames.Add(fileInfo.FullName, fileInfo.Name);
+                    filenames.Remove(keyToRemove);
                 }
             }
 
             var results = new List<FileUploadResponse>();
 
-            //results.Add(new FileUploadResponse(0, @"C:\Users\ptjhi\Dropbox (Covetrus)\Consumer Creative\GPM\2022\03.22 March\Week 01\Assets\shutterstock_1739907251.psd"));
             for (int i = 0; i < filenames.Values.Count(); i++)
             {
                 if (!results.Any(a => a.LocalPath.Equals(filenames.ElementAt(i).Key)))
