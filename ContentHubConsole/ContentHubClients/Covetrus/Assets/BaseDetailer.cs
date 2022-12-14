@@ -114,7 +114,7 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Assets
             }
         }
 
-        internal async Task AssignToProduct(CovetrusAsset asset)
+        public virtual async Task AssignToProduct(CovetrusAsset asset)
         {
             var filename = await asset.Asset.GetPropertyValueAsync<string>("Filename");
 

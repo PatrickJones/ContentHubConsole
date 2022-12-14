@@ -165,7 +165,7 @@ namespace ContentHubConsole
                 //await MissingFileExecutionUsingLogicApp(mClient);
                 await MigratedAssetsWithNoTypeExecution(mClient, true);
                 //await ReloadAssetsWithZeroFileSizeExecution(mClient);
-                //await MigratedAssetsWithNoAssignedProduct(mClient);
+                ////await MigratedAssetsWithNoAssignedProduct(mClient);
                 //await MigratedAssetsWithNoAssignedCatalog(mClient);
 
                 //################## 
@@ -815,9 +815,9 @@ namespace ContentHubConsole
                  (from e in entities
                   where e.Property("OriginPath").Contains("MASTER FILES") 
                     && e.Property("OriginPath").Contains("Product_Images")
-                    && e.Property("OriginPath").Contains("V034")
-                    //&& e.Property("Title").StartsWith("V035")
-                    && e.CreatedOn > DateTime.Today.AddDays(-8)
+                    //&& e.Property("OriginPath").Contains("V036")
+                    && e.Property("Title").StartsWith("V040")
+                    && e.CreatedOn > DateTime.Today.AddDays(-3)
                   select e).Skip(0).Take(2000));
             var mq = await mClient.Querying.QueryAsync(query);
             var items = mq.Items.ToList();
