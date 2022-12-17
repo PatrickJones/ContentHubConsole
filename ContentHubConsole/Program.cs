@@ -161,9 +161,9 @@ namespace ContentHubConsole
 
                 //await GetTotalMigratedFromPath(mClient);
                 //await DefaultExecution(mClient);
-                //await MissingFileExecution(mClient);
+                await MissingFileExecution(mClient);
                 //await MissingFileExecutionUsingLogicApp(mClient);
-                await MigratedAssetsWithNoTypeExecution(mClient, true);
+                //await MigratedAssetsWithNoTypeExecution(mClient, true);
                 //await ReloadAssetsWithZeroFileSizeExecution(mClient);
                 ////await MigratedAssetsWithNoAssignedProduct(mClient);
                 //await MigratedAssetsWithNoAssignedCatalog(mClient);
@@ -407,7 +407,7 @@ namespace ContentHubConsole
 
             var gpm = new ConaEcommProductAssetDetailer(mClient, uploadMgr.DirectoryFileUploadResponses);
             await gpm.UpdateAllAssets();
-            await gpm.SaveAllAssets();
+            //await gpm.SaveAllAssets();
 
             //if (gpm._failedAssets.Any())
             //{
@@ -661,7 +661,7 @@ namespace ContentHubConsole
 
             var gpm = new ConaEcommProductAssetDetailer(mClient, mig);// uploadMgr.DirectoryFileUploadResponses);
             await gpm.UpdateAllAssets();
-            await gpm.SaveAllAssets();
+            //await gpm.SaveAllAssets();
 
             //if (gpm._failedAssets.Any())
             //{
@@ -810,18 +810,37 @@ namespace ContentHubConsole
         private static async Task<List<FileUploadResponse>> GetMissingFiles(IWebMClient mClient)
         {
             Dictionary<string, string> filenames = new Dictionary<string, string>();
+            List<string> qFilenames = new List<string>();
+            int curSkip = 0;
+            int curTake = 5000;
+            bool canQuery = true;
 
-            var query = Query.CreateQuery(entities =>
+            while (canQuery)
+            {
+                var query = Query.CreateQuery(entities =>
                  (from e in entities
-                  where e.Property("OriginPath").Contains("MASTER FILES") 
+                  where e.Property("OriginPath").Contains("MASTER FILES")
                     && e.Property("OriginPath").Contains("Product_Images")
                     //&& e.Property("OriginPath").Contains("V036")
-                    && e.Property("Title").StartsWith("V040")
-                    && e.CreatedOn > DateTime.Today.AddDays(-3)
-                  select e).Skip(0).Take(2000));
-            var mq = await mClient.Querying.QueryAsync(query);
-            var items = mq.Items.ToList();
-            var qFilenames = items.Select(s => (string)s.GetPropertyValue("Filename")).ToList();
+                    && e.Property("Title").StartsWith("V050")
+                    && e.CreatedOn > DateTime.Today.AddDays(-10)
+                  select e).Skip(curSkip).Take(curTake));
+                var mq = await mClient.Querying.QueryAsync(query);
+                if (mq.TotalNumberOfResults > 0)
+                {
+                    var items = mq.Items.ToList();
+                    qFilenames.AddRange(items.Select(s => (string)s.GetPropertyValue("Filename")).ToList());
+                    curSkip = curSkip + curTake;
+                    if (items.Count < curTake)
+                    {
+                        canQuery = false;
+                    }
+                }
+                else
+                {
+                    canQuery = false;
+                }
+            }
 
             var directoryPath = OriginFolder;
             var files = Directory.GetFiles(directoryPath, "*.*", System.IO.SearchOption.AllDirectories);
