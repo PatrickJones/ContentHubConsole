@@ -74,7 +74,7 @@ namespace ContentHubConsole.Entities
             var fileUploadResponses = new List<FileUploadResponse>();
             var dateMin = new DateTime(2022, 12, 12);
             int skip = 0;
-            var take = 5000;
+            var take = 3000;
 
             try
             {
@@ -96,7 +96,7 @@ namespace ContentHubConsole.Entities
                         //&& e.Property("OriginPath").Contains("Brand Resources")
                         //&& e.Property("OriginPath").Contains("BRA")
                         //&& e.Property("OriginPath").Contains("Photography")
-                        && e.Property("Title").StartsWith("V048")
+                        && (e.Property("Title") == "3006157_3004723_ENG_LEFT.jpg")
                         && e.ModifiedOn > dateMin
                       select e).Skip(skip).Take(take));
                 }
@@ -116,7 +116,7 @@ namespace ContentHubConsole.Entities
                     {
                         try
                         {
-                            var files = Directory.GetFiles(PhotographyBasicAssetDetailer.UploadPath, asset.Filename, SearchOption.AllDirectories).Distinct();
+                            var files = Directory.GetFiles(PhotographyBasicAssetDetailer.UploadPath, asset.Filename, SearchOption.AllDirectories);
                             if (files.Any() && files.Count() == 1)
                             {
                                 fileUploadResponses.Add(new FileUploadResponse(asset.AsssetId, files.FirstOrDefault()));

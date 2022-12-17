@@ -354,11 +354,11 @@ namespace ContentHubConsole
         public static async Task DefaultExecution(IWebMClient mClient)
         {
             var uploadMgr = new UploadManager(mClient, (string)Configuration["Sandboxes:0:Covetrus"], _contentHubToken);
-            var directoryPath = ConaEcommProductAssetDetailer.UploadPath;
+            var directoryPath = DesignStoreFrontHybrisReadyProductAssetDetailer.UploadPath;
             await uploadMgr.UploadLocalDirectory(directoryPath, SearchOption.AllDirectories);
             await uploadMgr.UploadLargeFileLocalDirectory();
 
-            var gpm = new ConaEcommProductAssetDetailer(mClient, uploadMgr.DirectoryFileUploadResponses);
+            var gpm = new DesignStoreFrontHybrisReadyProductAssetDetailer(mClient, uploadMgr.DirectoryFileUploadResponses);
             await gpm.UpdateAllAssets();
             await gpm.SaveAllAssets();
 
@@ -372,7 +372,7 @@ namespace ContentHubConsole
             //        failedFiles.Add(uploadFailedFile);
             //    }
 
-            //    var gpmRetry = new ConaEcommProductAssetDetailer(mClient, failedFiles);
+            //    var gpmRetry = new DesignStoreFrontHybrisReadyProductAssetDetailer(mClient, failedFiles);
             //    await gpmRetry.UpdateAllAssets();
             //    await gpmRetry.SaveAllAssets();
 
@@ -397,7 +397,8 @@ namespace ContentHubConsole
         {
             var uploadMgr = new UploadManager(mClient, (string)Configuration["Sandboxes:0:Covetrus"], _contentHubToken);
 
-            var missing = await GetMissingFiles(mClient);
+            //var missing = await GetMissingFiles(mClient);
+            var missing = await GetSpecialMissingFiles(mClient);
             var uploads = TestMode ? missing.Take(1).ToList() : missing;
             Console.WriteLine($"Missing file count: {uploads.Count}");
             FileLogger.Log("Program.GetMissingFiles.", $"Missing file count: {uploads.Count}");
@@ -405,7 +406,7 @@ namespace ContentHubConsole
             await uploadMgr.UploadMissingFiles(uploads);
             await uploadMgr.UploadLargeFileLocalDirectory();
 
-            var gpm = new ConaEcommProductAssetDetailer(mClient, uploadMgr.DirectoryFileUploadResponses);
+            var gpm = new DesignStoreFrontHybrisReadyProductAssetDetailer(mClient, uploadMgr.DirectoryFileUploadResponses);
             await gpm.UpdateAllAssets();
             //await gpm.SaveAllAssets();
 
@@ -419,7 +420,7 @@ namespace ContentHubConsole
             //        failedFiles.Add(uploadFailedFile);
             //    }
 
-            //    var gpmRetry = new ConaEcommProductAssetDetailer(mClient, failedFiles);
+            //    var gpmRetry = new DesignStoreFrontHybrisReadyProductAssetDetailer(mClient, failedFiles);
             //    await gpmRetry.UpdateAllAssets();
             //    await gpmRetry.SaveAllAssets();
 
@@ -611,7 +612,7 @@ namespace ContentHubConsole
 
             }
 
-            var gpm = new ConaEcommProductAssetDetailer(mClient, uploads);
+            var gpm = new DesignStoreFrontHybrisReadyProductAssetDetailer(mClient, uploads);
             await gpm.UpdateAllAssets();
             await gpm.SaveAllAssets();
 
@@ -640,7 +641,7 @@ namespace ContentHubConsole
         public static async Task ReloadAssetsWithZeroFileSizeExecution(IWebMClient mClient)
         {
             var uploadMgr = new UploadManager(mClient, (string)Configuration["Sandboxes:0:Covetrus"], _contentHubToken);
-            //var directoryPath = ConaEcommProductAssetDetailer.UploadPath;
+            //var directoryPath = DesignStoreFrontHybrisReadyProductAssetDetailer.UploadPath;
             var uploads = await GetZeroFiles(mClient);
             await uploadMgr.UploadLocalDirectoryVersions(uploads);
             await uploadMgr.UploadLargeFileLocalDirectoryVersions();
@@ -652,14 +653,14 @@ namespace ContentHubConsole
         public static async Task MigratedAssetsWithNoTypeExecution(IWebMClient mClient, bool checkOriginPath)
         {
             var uploadMgr = new UploadManager(mClient, (string)Configuration["Sandboxes:0:Covetrus"], _contentHubToken);
-            //var directoryPath = ConaEcommProductAssetDetailer.UploadPath;
+            //var directoryPath = DesignStoreFrontHybrisReadyProductAssetDetailer.UploadPath;
             //await uploadMgr.UploadLocalDirectory(directoryPath, SearchOption.AllDirectories);
             //await uploadMgr.UploadLargeFileLocalDirectory();
 
             var em = new EntityManager(mClient);
             var mig = await em.GetMigratedAssetsWithNoType(checkOriginPath);
 
-            var gpm = new ConaEcommProductAssetDetailer(mClient, mig);// uploadMgr.DirectoryFileUploadResponses);
+            var gpm = new DesignStoreFrontHybrisReadyProductAssetDetailer(mClient, mig);// uploadMgr.DirectoryFileUploadResponses);
             await gpm.UpdateAllAssets();
             //await gpm.SaveAllAssets();
 
@@ -673,7 +674,7 @@ namespace ContentHubConsole
             //        failedFiles.Add(uploadFailedFile);
             //    }
 
-            //    var gpmRetry = new ConaEcommProductAssetDetailer(mClient, failedFiles);
+            //    var gpmRetry = new DesignStoreFrontHybrisReadyProductAssetDetailer(mClient, failedFiles);
             //    await gpmRetry.UpdateAllAssets();
             //    await gpmRetry.SaveAllAssets();
 
@@ -697,7 +698,7 @@ namespace ContentHubConsole
         public static async Task MigratedAssetsWithNoAssignedProduct(IWebMClient mClient)
         {
             var uploadMgr = new UploadManager(mClient, (string)Configuration["Sandboxes:0:Covetrus"], _contentHubToken);
-            //var directoryPath = ConaEcommProductAssetDetailer.UploadPath;
+            //var directoryPath = DesignStoreFrontHybrisReadyProductAssetDetailer.UploadPath;
             //await uploadMgr.UploadLocalDirectory(directoryPath, SearchOption.AllDirectories);
             //await uploadMgr.UploadLargeFileLocalDirectory();
 
@@ -742,7 +743,7 @@ namespace ContentHubConsole
         public static async Task MigratedAssetsWithNoAssignedCatalog(IWebMClient mClient)
         {
             var uploadMgr = new UploadManager(mClient, (string)Configuration["Sandboxes:0:Covetrus"], _contentHubToken);
-            //var directoryPath = ConaEcommProductAssetDetailer.UploadPath;
+            //var directoryPath = DesignStoreFrontHybrisReadyProductAssetDetailer.UploadPath;
             //await uploadMgr.UploadLocalDirectory(directoryPath, SearchOption.AllDirectories);
             //await uploadMgr.UploadLargeFileLocalDirectory();
 
@@ -819,8 +820,8 @@ namespace ContentHubConsole
             {
                 var query = Query.CreateQuery(entities =>
                  (from e in entities
-                  where e.Property("OriginPath").Contains("MASTER FILES")
-                    && e.Property("OriginPath").Contains("Product_Images")
+                  where e.Property("OriginPath").Contains("Hybris Ready")
+                    && e.Property("OriginPath").Contains("Child SKUs")
                     //&& e.Property("OriginPath").Contains("V036")
                     && e.Property("Title").StartsWith("V050")
                     && e.CreatedOn > DateTime.Today.AddDays(-10)
@@ -871,6 +872,79 @@ namespace ContentHubConsole
 
             return results;
         }
+
+        private static async Task<List<FileUploadResponse>> GetSpecialMissingFiles(IWebMClient mClient)
+        {
+            var directoryPath = OriginFolder;
+            var files = Directory.GetFiles(directoryPath, "*.*", System.IO.SearchOption.AllDirectories).ToList();
+
+            Dictionary<string, string> filenames = new Dictionary<string, string>();
+            List<string> qFilenames = new List<string>();
+            int skip = 0;
+            int take = 2000;
+            bool continueLoop = true;
+
+            while (continueLoop)
+            {
+                var query = Query.CreateQuery(entities =>
+                 (from e in entities
+                  where e.Property("OriginPath").Contains("Hybris Ready")
+                    && e.Property("OriginPath").Contains("Child SKUs")
+                    //&& e.Property("OriginPath").Contains("V036")
+                    //&& e.Property("Title").StartsWith("300")
+                    && e.CreatedOn > DateTime.Today.AddDays(-6)
+                  select e).Skip(skip).Take(take));
+                var mq = await mClient.Querying.QueryAsync(query);
+                var items = mq.Items.ToList();
+                qFilenames.AddRange(items.Select(s => "F:" + (string)s.GetPropertyValue("OriginPath")).ToList());
+
+                foreach (var item in qFilenames)
+                {
+                    files.Remove(item);
+                }
+
+                if (qFilenames.Count() >= mq.TotalNumberOfResults)
+                {
+                    continueLoop = false;
+                }
+                else
+                {
+                    skip = skip + take;
+                    
+                }
+            }
+
+
+            //var directoryPath = OriginFolder;
+            //var files = Directory.GetFiles(directoryPath, "*.*", System.IO.SearchOption.AllDirectories);
+            foreach (var file in files.Distinct())
+            {
+                var fileInfo = new FileInfo(file);
+                filenames.Add(fileInfo.FullName, fileInfo.Name);
+            }
+
+            foreach (var chFile in qFilenames)
+            {
+                var keyToRemove = filenames.Where(w => w.Value == chFile).Select(s => s.Key).FirstOrDefault();
+                if (!String.IsNullOrEmpty(keyToRemove))
+                {
+                    filenames.Remove(keyToRemove);
+                }
+            }
+
+            var results = new List<FileUploadResponse>();
+
+            for (int i = 0; i < filenames.Values.Count(); i++)
+            {
+                if (!results.Any(a => a.LocalPath.Equals(filenames.ElementAt(i).Key)))
+                {
+                    results.Add(new FileUploadResponse(0, filenames.ElementAt(i).Key));
+                }
+            }
+
+            return results;
+        }
+
 
         static async Task<bool> IsSandboxRunning(string sandboxUrl)
         {

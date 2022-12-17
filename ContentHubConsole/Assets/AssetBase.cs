@@ -24,6 +24,7 @@ namespace ContentHubConsole.Assets
 
         public const string PROPERTY_DESCRIPTION = "Description";
         public const string MANUFACTURER_ORIGINAL = "IsManufacturerOriginal";
+        public const string HYBRIS_READY = "MigrateToAWS";
         public readonly string OriginPath = String.Empty;
 
         public List<string> Errors = new List<string>();
@@ -83,6 +84,21 @@ namespace ContentHubConsole.Assets
                 var e = $"MarkAsManufacturerOriginal: {ex.Message}";
                 Console.WriteLine(e);
                 FileLogger.Log("MarkAsManufacturerOriginal", e);
+                Errors.Add(e);
+            }
+        }
+
+        public void MarkAsHybrisReady()
+        {
+            try
+            {
+                Asset.SetPropertyValue(HYBRIS_READY, true);
+            }
+            catch (Exception ex)
+            {
+                var e = $"MarkAsHybrisReady: {ex.Message}";
+                Console.WriteLine(e);
+                FileLogger.Log("MarkAsHybrisReady", e);
                 Errors.Add(e);
             }
         }

@@ -23,7 +23,7 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Assets.GPM
 
             await _taxonomyManager.LoadAllTaxonomies();
             long gpmStoreFrontBusinessDomainId = _taxonomyManager.BusinessDomainEntities.Where(w => w.Identifier.Equals("Business.Domain.GPM.StoreFront")).FirstOrDefault().Id.Value;
-            long dropboxId = _taxonomyManager.MigrationOriginEntities.Where(w => w.Identifier.Contains("OneDrive")).FirstOrDefault().Id.Value;
+            long dropboxId = _taxonomyManager.MigrationOriginEntities.Where(w => w.Identifier.Contains("Dropbox")).FirstOrDefault().Id.Value;
             long imageId = _taxonomyManager.AssetTypeEntities.Where(w => w.Identifier.Equals("M.AssetType.Design")).FirstOrDefault().Id.Value;
             long imageUsageIds = _taxonomyManager.AssetUsageEntities.Where(w => w.Identifier.Equals("CV.AssetUsage.Product")).FirstOrDefault().Id.Value;
 
@@ -111,7 +111,6 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Assets.GPM
         {
             var pathSplit = Program.IsVirtualMachine ? originPath.Split('\\').Skip(1).ToArray() : originPath.Split('\\').Skip(3).ToArray();
             var result = new StringBuilder();
-            result.Append("\\MASTER FILES");
 
             for (int i = 0; i < pathSplit.Length; i++)
             {

@@ -125,6 +125,30 @@ namespace ContentHubConsole.Products
             }
         }
 
+        public async Task SetProductAsChildByNumber(string productNumber)
+        {
+            try
+            {
+                Query query = Query.CreateQuery(entities =>
+                 (from e in entities
+                  where e.DefinitionName == PRODUCT_DEFINITION
+                    && e.Property("ProductNumber") == productNumber
+                  select e).Skip(0).Take(100));
+
+                var prods = await _webMClient.Querying.QueryAsync(query);
+                foreach (var item in prods.Items.ToList())
+                {
+                    item.SetPropertyValue("IsChildProduct", true);
+                    await _webMClient.Entities.SaveAsync(item);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                FileLogger.Log("SetProductAsChildByNumber", ex.Message);
+            }
+        }
+
         public async Task<List<FileUploadResponse>> GetMigratedAssetsWithAssignedProducts()
         {
             var fileUploadResponses = new List<FileUploadResponse>();

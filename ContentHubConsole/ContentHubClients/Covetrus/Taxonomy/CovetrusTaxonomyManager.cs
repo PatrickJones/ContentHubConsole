@@ -134,7 +134,7 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Taxonomy
             }
         }
 
-        private async Task LoadManufacturers(int skip = 0, int take = 100)
+        private async Task LoadManufacturers(int skip = 0, int take = 5000)
         {
             if (!ManufacturerEntities.Any())
             {

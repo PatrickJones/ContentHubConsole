@@ -19,5 +19,7 @@ namespace ContentHubConsole
         public static readonly string RELATION_PRODUCT_TOMASTERASSET = "PCMProductToMasterAsset";
         public static readonly string RELATION_CATALOG_TOASSET = "PCMCatalogToAsset";
         public static readonly string RELATION_CATALOG_TOMASTERASSET = "PCMCatalogToMasterAsset";
+        public static readonly string RELATION_DIGITAL_RIGHTS_PROFILE = "DRM.RightsProfile.RightsProfileToAsset";
+        public static readonly string RELATION_DIGITAL_RIGHTS_RESTRICTED = "DRM.Restricted.RestrictedToAsset";
     }
 }
