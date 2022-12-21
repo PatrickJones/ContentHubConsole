@@ -29,7 +29,7 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Assets.CONACC
                 try
                 {
                     await asset.LoadAssetMembers();
-                    asset.SetMigrationOriginPath(RemoveLocalPathPart(asset.OriginPath));
+                    //asset.SetMigrationOriginPath(RemoveLocalPathPart(asset.OriginPath));
                     await asset.UpdateDescription(GetDescriptionFromOriginPath(asset.OriginPath));
                     asset.AddChildToManyParentsRelation(spPhotoBusinessDomainId, CovetrusRelationNames.RELATION_BUSINESSDOMAIN_TOASSET);
                     asset.SetChildToOneParentRelation(dropboxId, CovetrusRelationNames.RELATION_MIGRATIONORIGIN_TOASSET);
@@ -55,6 +55,8 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Assets.CONACC
 
                     UpdateAssetType(asset);
 
+                    await asset.SaveAsset();
+                    ActuallySaved++;
                     var log = $"New asset {asset.Asset.Id} from path {asset.OriginPath}";
                     Console.WriteLine(log);
                     FileLogger.Log("UpdateAllAssets", log);

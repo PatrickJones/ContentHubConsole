@@ -29,7 +29,7 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Assets.CONACC
                 try
                 {
                     await asset.LoadAssetMembers();
-                    asset.SetMigrationOriginPath(RemoveLocalPathPart(asset.OriginPath));
+                    //asset.SetMigrationOriginPath(RemoveLocalPathPart(asset.OriginPath));
                     await asset.UpdateDescription(GetDescriptionFromOriginPath(asset.OriginPath));
                     asset.AddChildToManyParentsRelation(spPhotoBusinessDomainId, CovetrusRelationNames.RELATION_BUSINESSDOMAIN_TOASSET);
                     asset.SetChildToOneParentRelation(dropboxId, CovetrusRelationNames.RELATION_MIGRATIONORIGIN_TOASSET);
@@ -56,6 +56,8 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Assets.CONACC
 
                     UpdateAssetType(asset);
 
+                    await asset.SaveAsset();
+                    ActuallySaved++;
                     var log = $"New asset {asset.Asset.Id} from path {asset.OriginPath}";
                     Console.WriteLine(log);
                     FileLogger.Log("UpdateAllAssets", log);
@@ -86,7 +88,7 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Assets.CONACC
                     _ when typeFolderLevel.Equals("Med Surg", StringComparison.InvariantCultureIgnoreCase) => _taxonomyManager.BusinessDomainEntities.Where(w => w.Identifier.Equals("Business.Domain.CONACC.MedSurg")).FirstOrDefault().Id.Value,
                     _ when typeFolderLevel.Equals("Pharma", StringComparison.InvariantCultureIgnoreCase) => _taxonomyManager.BusinessDomainEntities.Where(w => w.Identifier.Equals("Business.Domain.CONACC.Pharma")).FirstOrDefault().Id.Value,
                     _ when typeFolderLevel.Equals("Strategic Accounts", StringComparison.InvariantCultureIgnoreCase) => _taxonomyManager.BusinessDomainEntities.Where(w => w.Identifier.Equals("Business.Domain.CONACC.StrategicAccounts")).FirstOrDefault().Id.Value,
-                    _ => _taxonomyManager.AssetTypeEntities.Where(w => w.Identifier.Equals("M.AssetType.Design")).FirstOrDefault().Id.Value
+                    _ => _taxonomyManager.BusinessDomainEntities.Where(w => w.Identifier.Equals("Business.Domain.CONACC.INC")).FirstOrDefault().Id.Value
                 };
 
                 asset.AddChildToManyParentsRelation(assetId, CovetrusRelationNames.RELATION_BUSINESSDOMAIN_TOASSET);

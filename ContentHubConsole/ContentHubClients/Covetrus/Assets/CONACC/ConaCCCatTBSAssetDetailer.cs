@@ -56,6 +56,8 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Assets.CONACC
 
                     UpdateAssetType(asset);
 
+                    await asset.SaveAsset();
+                    ActuallySaved++;
                     var log = $"New asset {asset.Asset.Id} from path {asset.OriginPath}";
                     Console.WriteLine(log);
                     FileLogger.Log("UpdateAllAssets", log);

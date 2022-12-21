@@ -43,6 +43,7 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Assets.GPM
 
                     //await AssignToProduct(asset, gpmStoreFrontBusinessDomainId);
                     await AssignToCatalogue(asset, GPM_CATALOG_NAME);
+                    AddManufacturerFromPath(asset);
 
                     SetManufacturerOriginal(asset);
                     //SetHybrisReady(asset);
@@ -63,6 +64,8 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Assets.GPM
 
                     //UpdateAssetType(asset);
 
+                    await asset.SaveAsset();
+                    ActuallySaved++;
                     var log = $"New asset {asset.Asset.Id} from path {asset.OriginPath}";
                     Console.WriteLine(log);
                     FileLogger.Log("UpdateAllAssets", log);
@@ -73,10 +76,19 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Assets.GPM
                     _failedAssets.Add(asset);
                     continue;
                 }
-
             }
 
             return results.Count;
+        }
+
+        private void AddManufacturerFromPath(CovetrusAsset asset)
+        {
+            var mfg = asset.OriginPath.Split('\\').Skip(4).Take(1).FirstOrDefault();
+            var tagId = _taxonomyManager.ManufacturerEntities.Where(w => w.Identifier.Contains(mfg, StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
+            if (tagId != null && tagId.Id.HasValue && tagId.Id.Value > 0)
+            {
+                asset.SetChildToOneParentRelation(tagId.Id.Value, CovetrusRelationNames.RELATION_MANUFACTURER_TOASSET);
+            }
         }
 
         public override async Task AssignToProduct(CovetrusAsset asset, long businessDomainId)

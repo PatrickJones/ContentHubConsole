@@ -4,6 +4,7 @@ using ContentHubConsole.ContentHubClients.Covetrus.Assets.SmartPak;
 using Stylelabs.M.Base.Querying;
 using Stylelabs.M.Base.Querying.Linq;
 using Stylelabs.M.Framework.Essentials.LoadOptions;
+using Stylelabs.M.Sdk.Contracts.Base;
 using Stylelabs.M.Sdk.WebClient;
 using System;
 using System.Collections.Generic;
@@ -93,10 +94,11 @@ namespace ContentHubConsole.Entities
                       where e.DefinitionName == "M.Asset"
                         && e.Parent("AssetTypeToAsset") == null
                         //&& e.ModifiedByUsername == "patrick.jones@xcentium.com"
-                        //&& e.Property("OriginPath").Contains("Brand Resources")
-                        //&& e.Property("OriginPath").Contains("BRA")
+                        && e.Property("OriginPath").Contains("CONA Creative Campaigns")
+                        && e.Property("OriginPath").Contains("2021")
+                        && e.Property("OriginPath").Contains("Strategic Accounts")
                         //&& e.Property("OriginPath").Contains("Photography")
-                        && e.Property("Title").StartsWith("V053")
+                        //&& (e.Property("Title") == "3006157_3004723_ENG_LEFT.jpg")
                         && e.ModifiedOn > dateMin
                       select e).Skip(skip).Take(take));
                 }
@@ -159,6 +161,95 @@ namespace ContentHubConsole.Entities
             Console.WriteLine($"Assets getting updated: {fileUploadResponses.Count}");
             return fileUploadResponses;
         }
+
+        public async Task<List<FileUploadResponse>> GetMigratedAssetsWithPathAndNoType(bool checkOriginPath)
+        {
+            var iEntities = new List<IEntity>();
+            var fileUploadResponses = new List<FileUploadResponse>();
+            var dateMin = new DateTime(2022, 12, 16);
+            int curSkip = 0;
+            int curTake = 2000;
+            bool canQuery = true;
+
+            try
+            {
+                while (canQuery)
+                {
+                    Query query = Query.CreateQuery(entities =>
+                     (from e in entities
+                      where e.DefinitionName == "M.Asset"
+                        && e.Parent("AssetTypeToAsset") == null
+                        //&& e.ModifiedByUsername == "patrick.jones@xcentium.com"
+                        && e.ModifiedOn >= dateMin
+                      select e).Skip(curSkip).Take(curTake));
+
+                    if (checkOriginPath)
+                    {
+                        query = Query.CreateQuery(entities =>
+                         (from e in entities
+                          where e.DefinitionName == "M.Asset"
+                            && e.Parent("AssetTypeToAsset") == null
+                            //&& e.ModifiedByUsername == "patrick.jones@xcentium.com"
+                            && e.Property("OriginPath").Contains("Dropbox (Covetrus)")
+                            && e.Property("OriginPath").Contains("VCP")
+                            //&& e.Property("OriginPath").Contains("Photography")
+                            //&& (e.Property("Title") == "3006157_3004723_ENG_LEFT.jpg")
+                            && e.ModifiedOn > dateMin
+                          select e).Skip(curSkip).Take(curTake));
+                    }
+
+                    var mq = await _webMClient.Querying.QueryAsync(query);
+                    if (mq.TotalNumberOfResults > 0 && iEntities.Count <= 7000)
+                    {
+                        iEntities.AddRange(mq.Items.ToList());
+                        curSkip = curSkip + curTake;
+                        if (mq.Items.Count < curTake)
+                        {
+                            canQuery = false;
+                        }
+                    }
+                    else
+                    {
+                        canQuery = false;
+                    }
+                }
+
+                if (iEntities.Any())
+                {
+                    Console.WriteLine($"Assets found: {iEntities.Count}");
+                    var tags = iEntities.ToList();
+                    var assets = tags.Select(s => new { AsssetId = s.Id.Value, OriginPath = s.GetPropertyValue<string>("OriginPath") }).ToList();
+
+
+                    foreach (var asset in assets)
+                    {
+                        try
+                        {
+                            fileUploadResponses.Add(new FileUploadResponse(asset.AsssetId, asset.OriginPath));
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"Error getting path for asset id: {asset.AsssetId}. Messsage: {ex.Message}");
+                            continue;
+                        }
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("No assets found.");
+                }
+
+            }
+            catch (Exception ex)
+            {
+                var error = $"Error assets";
+                Console.WriteLine(error);
+                FileLogger.Log("AddTagValue", error);
+            }
+            Console.WriteLine($"Assets getting updated: {fileUploadResponses.Count}");
+            return fileUploadResponses;
+        }
+
 
         public async Task RemoveAssets(bool delete = false)
         {

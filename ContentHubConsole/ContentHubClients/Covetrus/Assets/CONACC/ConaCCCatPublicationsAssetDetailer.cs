@@ -54,6 +54,8 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Assets.CONACC
                     SetMonth(asset);
                     //SetWeek(asset);
 
+                    await asset.SaveAsset();
+                    ActuallySaved++;
                     UpdateAssetType(asset);
 
                     var log = $"New asset {asset.Asset.Id} from path {asset.OriginPath}";
