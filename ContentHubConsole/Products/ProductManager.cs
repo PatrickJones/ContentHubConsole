@@ -3,6 +3,7 @@ using ContentHubConsole.ContentHubClients.Covetrus.Assets.CONAEcomm;
 using ContentHubConsole.ContentHubClients.Covetrus.Assets.SmartPak;
 using Stylelabs.M.Base.Querying;
 using Stylelabs.M.Base.Querying.Linq;
+using Stylelabs.M.Framework.Essentials.LoadConfigurations;
 using Stylelabs.M.Framework.Essentials.LoadOptions;
 using Stylelabs.M.Sdk.Contracts.Base;
 using Stylelabs.M.Sdk.WebClient;
@@ -25,10 +26,13 @@ namespace ContentHubConsole.Products
         private const string PRODUCT_DEFINITION = "M.PCM.Product";
         private const string PRODUCT_FAMILY_DEFINITION = "M.PCM.ProductFamily";
         private const string PRODUCT_CATALOG_DEFINITION = "M.PCM.Catalog";
+        private EntityLoadConfiguration _entityLoadConfiguration;
 
         public ProductManager(IWebMClient webMClient)
         {
             _webMClient = webMClient;
+            _entityLoadConfiguration = new EntityLoadConfiguration();
+            _entityLoadConfiguration.RelationLoadOption = RelationLoadOption.All;
         }
 
         public async Task<long> CreateProduct(string productName, string productNumber, string label, string shortDescription, string longDescription)
@@ -103,17 +107,18 @@ namespace ContentHubConsole.Products
             }
         }
 
-        public async Task<List<IEntity>> GetProductByNumber(string productNumber)
+        public async Task<List<IEntity>> GetProductByNumber(string productNumber, long businessDomainId)
         {
             try
             {
                 Query query = Query.CreateQuery(entities =>
                  (from e in entities
                   where e.DefinitionName == PRODUCT_DEFINITION
+                    && e.Parent("BusinessDomainToProduct").In(businessDomainId)
                     && e.Property("ProductNumber") == productNumber
                   select e).Skip(0).Take(100));
 
-                var prods = await _webMClient.Querying.QueryAsync(query);
+                var prods = await _webMClient.Querying.QueryAsync(query, _entityLoadConfiguration);
                 return prods.Items.ToList();
             }
             catch (Exception ex)
@@ -125,17 +130,41 @@ namespace ContentHubConsole.Products
             }
         }
 
-        public async Task SetProductAsChildByNumber(string productNumber)
+        public async Task<List<IEntity>> GetProductByNumbers(List<string> productNumbers, long businessDomainId)
         {
             try
             {
                 Query query = Query.CreateQuery(entities =>
                  (from e in entities
                   where e.DefinitionName == PRODUCT_DEFINITION
+                    && e.Parent("BusinessDomainToProduct").In(businessDomainId)
+                    && e.Property("ProductNumber").In(productNumbers)
+                  select e).Skip(0).Take(3000));
+
+                var prods = await _webMClient.Querying.QueryAsync(query, _entityLoadConfiguration);
+                return prods.Items.ToList();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                FileLogger.Log("GetProductByNumber", ex.Message);
+
+                return new List<IEntity>();
+            }
+        }
+
+        public async Task SetProductAsChildByNumber(string productNumber, long businessDomainId)
+        {
+            try
+            {
+                Query query = Query.CreateQuery(entities =>
+                 (from e in entities
+                  where e.DefinitionName == PRODUCT_DEFINITION
+                    && e.Parent("BusinessDomainToProduct").In(businessDomainId)
                     && e.Property("ProductNumber") == productNumber
                   select e).Skip(0).Take(100));
 
-                var prods = await _webMClient.Querying.QueryAsync(query);
+                var prods = await _webMClient.Querying.QueryAsync(query, _entityLoadConfiguration);
                 foreach (var item in prods.Items.ToList())
                 {
                     item.SetPropertyValue("IsChildProduct", true);

@@ -10,9 +10,10 @@ using static System.Net.Mime.MediaTypeNames;
 
 namespace ContentHubConsole.ContentHubClients.Covetrus.Assets.GPM
 {
-    internal class DesignStoreFrontHybrisReadyProductAssetDetailer : BaseDetailer
+    public class DesignStoreFrontHybrisReadyProductAssetDetailer : BaseDetailer
     {
         private const string GPM_CATALOG_NAME = "GPM Storefront Master Catalog";
+        private const string BUSINESS_DOMAIN_NAME = "Business.Domain.GPM.StoreFront";
 
         public DesignStoreFrontHybrisReadyProductAssetDetailer(IWebMClient webMClient, ICollection<FileUploadResponse> fileUploadResponses) : base(webMClient, fileUploadResponses)
         {
@@ -23,7 +24,7 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Assets.GPM
             var results = new List<long>();
 
             await _taxonomyManager.LoadAllTaxonomies();
-            long gpmStoreFrontBusinessDomainId = _taxonomyManager.BusinessDomainEntities.Where(w => w.Identifier.Equals("Business.Domain.GPM.StoreFront")).FirstOrDefault().Id.Value;
+            long gpmStoreFrontBusinessDomainId = _taxonomyManager.BusinessDomainEntities.Where(w => w.Identifier.Equals(BUSINESS_DOMAIN_NAME)).FirstOrDefault().Id.Value;
             long dropboxId = _taxonomyManager.MigrationOriginEntities.Where(w => w.Identifier.Contains("Dropbox", StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault().Id.Value;
             long imageId = _taxonomyManager.AssetTypeEntities.Where(w => w.Identifier.Equals("M.AssetType.Design")).FirstOrDefault().Id.Value;
             long imageUsageIds = _taxonomyManager.AssetUsageEntities.Where(w => w.Identifier.Equals("CV.AssetUsage.Product")).FirstOrDefault().Id.Value;
@@ -42,7 +43,7 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Assets.GPM
 
                     await AddTagFromPath(asset);
 
-                    await AssignToProduct(asset);
+                    await AssignToProduct(asset, gpmStoreFrontBusinessDomainId);
                     await AssignToCatalogue(asset, GPM_CATALOG_NAME);
 
                     //SetManufacturerOriginal(asset);
@@ -82,7 +83,7 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Assets.GPM
             return results.Count;
         }
 
-        public override async Task AssignToProduct(CovetrusAsset asset)
+        public override async Task AssignToProduct(CovetrusAsset asset, long businessDomainId)
         {
             var pathSplit = asset.OriginPath.Split('\\');
             var filename = pathSplit.Last();
@@ -128,10 +129,10 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Assets.GPM
                     productNumber = sp[1];
                 }
 
-                await _productManager.SetProductAsChildByNumber(productNumber);
+                await _productManager.SetProductAsChildByNumber(productNumber, businessDomainId);
             }
 
-            var products = await _productManager.GetProductByNumber(productNumber);
+            var products = await _productManager.GetProductByNumber(productNumber, businessDomainId);
 
             if (products.Count > 0)
             {

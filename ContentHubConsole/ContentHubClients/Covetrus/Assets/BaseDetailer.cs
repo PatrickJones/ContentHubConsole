@@ -114,7 +114,7 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Assets
             }
         }
 
-        public virtual async Task AssignToProduct(CovetrusAsset asset)
+        public virtual async Task AssignToProduct(CovetrusAsset asset, long businessDomainId)
         {
             var filename = await asset.Asset.GetPropertyValueAsync<string>("Filename");
 
@@ -123,7 +123,7 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Assets
                 var split = filename.Split('.');
                 var productId = split[0].Replace("P", "").Substring(0,6);
 
-                var products = await _productManager.GetProductByNumber(productId);
+                var products = await _productManager.GetProductByNumber(productId, businessDomainId);
 
                 if (products.Count > 0)
                 {
@@ -139,7 +139,7 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Assets
                 var split = filename.Split('.');
                 var productId = split[0].Replace("V", "").Substring(0, 6);
 
-                var products = await _productManager.GetProductByNumber(productId);
+                var products = await _productManager.GetProductByNumber(productId, businessDomainId);
 
                 if (products.Count > 0)
                 {
@@ -155,7 +155,7 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Assets
                 var split = filename.Split('.');
                 var productId = split[0].Replace("V", "").Substring(0, 6);
 
-                var products = await _productManager.GetProductByNumber(productId);
+                var products = await _productManager.GetProductByNumber(productId, businessDomainId);
 
                 if (products.Count > 0)
                 {

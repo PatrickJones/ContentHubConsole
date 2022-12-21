@@ -72,7 +72,7 @@ namespace ContentHubConsole.Entities
         public async Task<List<FileUploadResponse>> GetMigratedAssetsWithNoType(bool checkOriginPath)
         {
             var fileUploadResponses = new List<FileUploadResponse>();
-            var dateMin = new DateTime(2022, 12, 12);
+            var dateMin = new DateTime(2022, 12, 16);
             int skip = 0;
             var take = 3000;
 
@@ -96,7 +96,7 @@ namespace ContentHubConsole.Entities
                         //&& e.Property("OriginPath").Contains("Brand Resources")
                         //&& e.Property("OriginPath").Contains("BRA")
                         //&& e.Property("OriginPath").Contains("Photography")
-                        && (e.Property("Title") == "3006157_3004723_ENG_LEFT.jpg")
+                        && e.Property("Title").StartsWith("V053")
                         && e.ModifiedOn > dateMin
                       select e).Skip(skip).Take(take));
                 }

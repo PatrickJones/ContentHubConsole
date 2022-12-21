@@ -40,7 +40,7 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Assets.CONAEcomm
 
                     await AddTagFromPath(asset);
 
-                    await AssignToProduct(asset);
+                    await AssignToProduct(asset, spPhotoBusinessDomainId);
                     await AssignToCatalogue(asset, CONA_CATALOG_NAME);
 
                     SetManufacturerOriginal(asset);

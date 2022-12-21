@@ -11,6 +11,7 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Assets.GPM
     public class DesignStoreFrontMfgOrgProductAssetDetailer : BaseDetailer
     {
         private const string GPM_CATALOG_NAME = "GPM Storefront Master Catalog";
+        private const string BUSINESS_DOMAIN_NAME = "Business.Domain.GPM.StoreFront";
 
         public DesignStoreFrontMfgOrgProductAssetDetailer(IWebMClient webMClient, ICollection<FileUploadResponse> fileUploadResponses) : base(webMClient, fileUploadResponses)
         {
@@ -40,7 +41,7 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Assets.GPM
 
                     await AddTagFromPath(asset);
 
-                    //await AssignToProduct(asset);
+                    //await AssignToProduct(asset, gpmStoreFrontBusinessDomainId);
                     await AssignToCatalogue(asset, GPM_CATALOG_NAME);
 
                     SetManufacturerOriginal(asset);
@@ -78,7 +79,7 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Assets.GPM
             return results.Count;
         }
 
-        public override async Task AssignToProduct(CovetrusAsset asset)
+        public override async Task AssignToProduct(CovetrusAsset asset, long businessDomainId)
         {
             var pathSplit = asset.OriginPath.Split('\\');
             var filename = pathSplit.Last();
@@ -121,10 +122,10 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Assets.GPM
                     productNumber = sp[1];
                 }
 
-                await _productManager.SetProductAsChildByNumber(productNumber);
+                await _productManager.SetProductAsChildByNumber(productNumber, businessDomainId);
             }
 
-            var products = await _productManager.GetProductByNumber(productNumber);
+            var products = await _productManager.GetProductByNumber(productNumber, businessDomainId);
 
             if (products.Count > 0)
             {
