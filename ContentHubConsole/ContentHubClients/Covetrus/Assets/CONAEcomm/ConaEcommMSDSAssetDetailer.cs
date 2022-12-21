@@ -12,6 +12,7 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Assets.CONAEcomm
     public class ConaEcommMSDSAssetDetailer : BaseDetailer
     {
         private const string CONA_CATALOG_NAME = "CONA E-Comm Master Catalog";
+        private const string BUSINESS_DOMAIN_NAME = "Business.Domain.CONAEComm";
 
         public ConaEcommMSDSAssetDetailer(IWebMClient webMClient, ICollection<FileUploadResponse> fileUploadResponses) : base(webMClient, fileUploadResponses)
         {
@@ -22,7 +23,7 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Assets.CONAEcomm
             var results = new List<long>();
 
             await _taxonomyManager.LoadAllTaxonomies();
-            long spPhotoBusinessDomainId = _taxonomyManager.BusinessDomainEntities.Where(w => w.Identifier.Equals("Business.Domain.CONAEComm")).FirstOrDefault().Id.Value;
+            long spPhotoBusinessDomainId = _taxonomyManager.BusinessDomainEntities.Where(w => w.Identifier.Equals(BUSINESS_DOMAIN_NAME)).FirstOrDefault().Id.Value;
             long dropboxId = _taxonomyManager.MigrationOriginEntities.Where(w => w.Identifier.Contains("OneDrive")).FirstOrDefault().Id.Value;
             long imageId = _taxonomyManager.AssetTypeEntities.Where(w => w.Identifier.Equals("M.AssetType.MaterialSafetyDataSheet")).FirstOrDefault().Id.Value;
             long imageUsageIds = _taxonomyManager.AssetUsageEntities.Where(w => w.Identifier.Equals("CV.AssetUsage.Advertising")).FirstOrDefault().Id.Value;
@@ -41,7 +42,7 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Assets.CONAEcomm
 
                     await AddTagFromPath(asset);
 
-                    await AssignToProduct(asset);
+                    await AssignToProduct(asset, spPhotoBusinessDomainId);
                     await AssignToCatalogue(asset, CONA_CATALOG_NAME);
                     //SetStockImages(asset);
                     //SetProductUsage(asset);
@@ -78,6 +79,7 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Assets.CONAEcomm
 
         public async Task<long> AssignAssetsToProducts()
         {
+            long businessDomainId = _taxonomyManager.BusinessDomainEntities.Where(w => w.Identifier.Equals(BUSINESS_DOMAIN_NAME)).FirstOrDefault().Id.Value;
             var results = new List<long>();
 
             await _taxonomyManager.LoadAllTaxonomies();
@@ -87,7 +89,7 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Assets.CONAEcomm
                 try
                 {
                     await asset.LoadAssetMembers();
-                    await AssignToProduct(asset);
+                    await AssignToProduct(asset, businessDomainId);
 
                     var log = $"New asset {asset.Asset.Id} from path {asset.OriginPath} assigned to Product";
                     Console.WriteLine(log);
