@@ -170,7 +170,7 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Taxonomy
             }
         }
 
-        private async Task LoadPractice(int skip = 0, int take = 100)
+        private async Task LoadPractice(int skip = 0, int take = 2000)
         {
             if (!PracticeEntities.Any())
             {

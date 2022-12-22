@@ -41,7 +41,7 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Assets.CONAEcomm
 
                     await AddTagFromPath(asset);
 
-                    await AssignToProduct(asset);
+                    await AssignToProduct(asset, spPhotoBusinessDomainId);
                     await AssignToCatalogue(asset, CONA_CATALOG_NAME);
                     //SetStockImages(asset);
                     //SetProductUsage(asset);
@@ -78,6 +78,7 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Assets.CONAEcomm
 
         public async Task<long> AssignAssetsToProducts()
         {
+            long businessDomainId = _taxonomyManager.BusinessDomainEntities.Where(w => w.Identifier.Equals("Business.Domain.CONAEComm")).FirstOrDefault().Id.Value;
             var results = new List<long>();
 
             await _taxonomyManager.LoadAllTaxonomies();
@@ -87,7 +88,7 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Assets.CONAEcomm
                 try
                 {
                     await asset.LoadAssetMembers();
-                    await AssignToProduct(asset);
+                    await AssignToProduct(asset, businessDomainId);
 
                     var log = $"New asset {asset.Asset.Id} from path {asset.OriginPath} assigned to Product";
                     Console.WriteLine(log);

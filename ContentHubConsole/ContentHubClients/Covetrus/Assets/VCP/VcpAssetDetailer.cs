@@ -2,6 +2,7 @@
 using Stylelabs.M.Sdk.WebClient;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -57,6 +58,8 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Assets.VCP
 
                     UpdateAssetType(asset);
 
+                    await asset.SaveAsset();
+                    ActuallySaved++;
                     var log = $"New asset {asset.Asset.Id} from path {asset.OriginPath}";
                     Console.WriteLine(log);
                     FileLogger.Log("UpdateAllAssets", log);
@@ -75,7 +78,22 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Assets.VCP
 
         private void SetPractice(CovetrusAsset asset)
         {
-            if (asset.OriginPath.Contains("Clients-Equine") || asset.OriginPath.Contains("Clients-Independent") || asset.OriginPath.Contains("Clients-Multi"))
+            if (asset.OriginPath.Contains("Clients-AAHA"))
+            {
+                long practiceTypeId = _taxonomyManager.PracticeEntities
+                        .Where(w => w.Identifier.Equals("CV.Practice.PorterCountyAAHA"))
+                        .Select(s => s.Id.Value).FirstOrDefault();
+
+                if (practiceTypeId > 0)
+                {
+                    asset.AddChildToManyParentsRelation(practiceTypeId, CovetrusRelationNames.RELATION_PRACTICE_TOASSET);
+                    return; 
+                }
+            }
+
+            if (asset.OriginPath.Contains("Clients-Equine") 
+                || asset.OriginPath.Contains("Clients-Independent") 
+                || asset.OriginPath.Contains("Clients-Multi"))
             {
                 var prac = asset.OriginPath.Split('\\').Skip(3).Take(1).FirstOrDefault();
 
@@ -86,8 +104,11 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Assets.VCP
                         .Where(w => w.Identifier.Equals(practId))
                         .Select(s => s.Id.Value).FirstOrDefault();
 
-                    asset.AddChildToManyParentsRelation(practiceTypeId, CovetrusRelationNames.RELATION_PRACTICETYPE_TOASSET);
-                    return;
+                    if (practiceTypeId> 0)
+                    {
+                        asset.AddChildToManyParentsRelation(practiceTypeId, CovetrusRelationNames.RELATION_PRACTICE_TOASSET);
+                        return; 
+                    }
                 }
             }
         }
@@ -100,8 +121,11 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Assets.VCP
                 .Where(w => w.Identifier.Equals("CV.PracticeType.Equine"))
                 .Select(s => s.Id.Value).FirstOrDefault();
 
-                asset.AddChildToManyParentsRelation(practiceTypeId, CovetrusRelationNames.RELATION_PRACTICETYPE_TOASSET);
-                return;
+                if (practiceTypeId > 0)
+                {
+                    asset.AddChildToManyParentsRelation(practiceTypeId, CovetrusRelationNames.RELATION_PRACTICETYPE_TOASSET);
+                    return; 
+                }
             }
 
             if (asset.OriginPath.Contains("Clients-Independent"))
@@ -110,8 +134,11 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Assets.VCP
                 .Where(w => w.Identifier.Equals("CV.PracticeType.Independent"))
                 .Select(s => s.Id.Value).FirstOrDefault();
 
-                asset.AddChildToManyParentsRelation(practiceTypeId, CovetrusRelationNames.RELATION_PRACTICETYPE_TOASSET);
-                return;
+                if (practiceTypeId > 0)
+                {
+                    asset.AddChildToManyParentsRelation(practiceTypeId, CovetrusRelationNames.RELATION_PRACTICETYPE_TOASSET);
+                    return;
+                }
             }
 
             if (asset.OriginPath.Contains("Clients-Multi"))
@@ -120,8 +147,11 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Assets.VCP
                 .Where(w => w.Identifier.Equals("CV.PracticeType.Multiple"))
                 .Select(s => s.Id.Value).FirstOrDefault();
 
-                asset.AddChildToManyParentsRelation(practiceTypeId, CovetrusRelationNames.RELATION_PRACTICETYPE_TOASSET);
-                return;
+                if (practiceTypeId > 0)
+                {
+                    asset.AddChildToManyParentsRelation(practiceTypeId, CovetrusRelationNames.RELATION_PRACTICETYPE_TOASSET);
+                    return;
+                }
             }
         }
 
