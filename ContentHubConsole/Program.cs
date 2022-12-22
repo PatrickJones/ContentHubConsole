@@ -727,8 +727,7 @@ namespace ContentHubConsole
             var em = new ProductManager(mClient);
             var mig = await em.GetMigratedAssetsWithAssignedProducts();
 
-            var gpm = new ConaEcommMSDSAssetDetailer(mClient, mig);// uploadMgr.DirectoryFileUploadResponses);
-            await gpm.AssignAssetsToProducts();
+            var gpm = new DesignSmartPakProductAssetDetailer(mClient, mig);// uploadMgr.DirectoryFileUploadResponses);
             await gpm.SaveAllAssets();
 
             if (gpm._failedAssets.Any())
@@ -741,9 +740,9 @@ namespace ContentHubConsole
                     failedFiles.Add(uploadFailedFile);
                 }
 
-                var gpmRetry = new ConaEcommMSDSAssetDetailer(mClient, failedFiles);
+                var gpmRetry = new DesignSmartPakProductAssetDetailer(mClient, failedFiles);
                 await gpmRetry.UpdateAllAssets();
-                await gpmRetry.SaveAllAssets();
+                //await gpmRetry.SaveAllAssets();
 
                 var ffc = $"Failed files count: {gpmRetry._failedAssets.Count}";
                 Console.WriteLine(ffc);
@@ -772,8 +771,7 @@ namespace ContentHubConsole
             var em = new ProductManager(mClient);
             var mig = await em.GetMigratedAssetsWithAssignedCatalog();
 
-            var gpm = new ConaEcommMSDSAssetDetailer(mClient, mig);// uploadMgr.DirectoryFileUploadResponses);
-            await gpm.AssignAssetsToCatalog("CONA E-Comm Master Catalog");
+            var gpm = new DesignSmartPakProductAssetDetailer(mClient, mig);// uploadMgr.DirectoryFileUploadResponses);
             await gpm.SaveAllAssets();
 
             if (gpm._failedAssets.Any())
@@ -786,7 +784,7 @@ namespace ContentHubConsole
                     failedFiles.Add(uploadFailedFile);
                 }
 
-                var gpmRetry = new ConaEcommMSDSAssetDetailer(mClient, failedFiles);
+                var gpmRetry = new DesignSmartPakProductAssetDetailer(mClient, failedFiles);
                 await gpmRetry.UpdateAllAssets();
                 await gpmRetry.SaveAllAssets();
 
