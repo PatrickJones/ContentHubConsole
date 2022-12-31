@@ -225,10 +225,25 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Assets
 
         internal void SetStockImages(CovetrusAsset asset)
         {
-            if (asset.OriginPath.Contains("Stock") || asset.OriginPath.Contains("Getty"))
+            if (asset.OriginPath.Contains("Stock", StringComparison.InvariantCultureIgnoreCase)
+                || asset.OriginPath.Contains("Infographic", StringComparison.InvariantCultureIgnoreCase)
+                || asset.OriginPath.Contains("Getty", StringComparison.InvariantCultureIgnoreCase))
             {
                 List<long> usageIds = _taxonomyManager.AssetUsageEntities
                 .Where(w => w.Identifier.Contains("StockImages"))
+                .Select(s => s.Id.Value).ToList();
+
+                foreach (var usage in usageIds)
+                {
+                    asset.AddChildToManyParentsRelation(usage, RelationNames.RELATION_ASSETUSAGE_TOASSET);
+                }
+            }
+
+
+            if (asset.OriginPath.Contains("social", StringComparison.InvariantCultureIgnoreCase))
+            {
+                List<long> usageIds = _taxonomyManager.AssetUsageEntities
+                .Where(w => w.Identifier.Contains("SocialMedia"))
                 .Select(s => s.Id.Value).ToList();
 
                 foreach (var usage in usageIds)
@@ -387,7 +402,8 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Assets
 
         internal void SetWebpage(CovetrusAsset asset)
         {
-            if (asset.OriginPath.Contains("homepage", StringComparison.InvariantCultureIgnoreCase))
+            if (asset.OriginPath.Contains("homepage", StringComparison.InvariantCultureIgnoreCase)
+                || asset.OriginPath.Contains("landing", StringComparison.InvariantCultureIgnoreCase))
             {
                 List<long> usageIds = _taxonomyManager.AssetUsageEntities
                 .Where(w => w.Identifier.Contains("webpage", StringComparison.InvariantCultureIgnoreCase))
