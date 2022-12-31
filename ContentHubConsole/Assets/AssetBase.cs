@@ -25,6 +25,7 @@ namespace ContentHubConsole.Assets
         public const string PROPERTY_DESCRIPTION = "Description";
         public const string MANUFACTURER_ORIGINAL = "IsManufacturerOriginal";
         public const string HYBRIS_READY = "MigrateToAWS";
+        public const string LIT_NUMBER = "LitNumber";
         public readonly string OriginPath = String.Empty;
 
         public List<string> Errors = new List<string>();
@@ -99,6 +100,21 @@ namespace ContentHubConsole.Assets
                 var e = $"MarkAsHybrisReady: {ex.Message}";
                 Console.WriteLine(e);
                 FileLogger.Log("MarkAsHybrisReady", e);
+                Errors.Add(e);
+            }
+        }
+
+        public void SetLitNumber(string number)
+        {
+            try
+            {
+                Asset.SetPropertyValue(LIT_NUMBER, number);
+            }
+            catch (Exception ex)
+            {
+                var e = $"SetLitNumber: {ex.Message}";
+                Console.WriteLine(e);
+                FileLogger.Log("SetLitNumber", e);
                 Errors.Add(e);
             }
         }

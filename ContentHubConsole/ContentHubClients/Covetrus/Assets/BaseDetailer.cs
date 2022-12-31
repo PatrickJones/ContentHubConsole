@@ -63,7 +63,7 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Assets
             await tasks.WhenAll();
         }
 
-        public string GetDescriptionFromOriginPath(string path)
+        public virtual string GetDescriptionFromOriginPath(string path)
         {
             if (!String.IsNullOrEmpty(path))
             {

@@ -166,7 +166,7 @@ namespace ContentHubConsole.Entities
         {
             var iEntities = new List<IEntity>();
             var fileUploadResponses = new List<FileUploadResponse>();
-            var dateMin = new DateTime(2022, 12, 28);
+            var dateMin = new DateTime(2022, 12, 29);
             int curSkip = 0;
             int curTake = 2000;
             bool canQuery = true;
@@ -189,13 +189,12 @@ namespace ContentHubConsole.Entities
                          (from e in entities
                           where e.DefinitionName == "M.Asset"
                             && e.Parent("AssetTypeToAsset") == null
-                            && e.Parent("BusinessDomainToAsset").In(32586)
+                            && e.Parent("BusinessDomainToAsset").In(32585)
                             //&& e.ModifiedByUsername == "patrick.jones@xcentium.com"
                             && e.Property("OriginPath").Contains("Dropbox (Covetrus)")
-                            && e.Property("OriginPath").Contains("Consumer Creative")
-                            && e.Property("OriginPath").Contains("SmartPak")
-                            && e.Property("OriginPath").Contains("IMAGES")
-                            && e.Property("OriginPath").Contains("Product")
+                            && e.Property("OriginPath").Contains(" Creative Campaigns (1)")
+                            && (e.Property("OriginPath").Contains("2020") || e.Property("OriginPath").Contains("2021"))
+                            && e.Property("OriginPath").Contains("Strategic Accounts")
                             //&& e.Property("OriginPath").Contains("Photography")
                             //&& (e.Property("Title") == "3006157_3004723_ENG_LEFT.jpg")
                             && e.ModifiedOn > dateMin
