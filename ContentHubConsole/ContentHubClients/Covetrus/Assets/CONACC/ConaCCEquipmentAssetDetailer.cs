@@ -19,7 +19,7 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Assets.CONACC
             var results = new List<long>();
 
             await _taxonomyManager.LoadAllTaxonomies();
-            long spPhotoBusinessDomainId = _taxonomyManager.BusinessDomainEntities.Where(w => w.Identifier.Equals("Business.Domain.CONACC.Equipment")).FirstOrDefault().Id.Value;
+            long spPhotoBusinessDomainId = _taxonomyManager.BusinessDomainEntities.Where(w => w.Identifier.Equals("Business.Domain.Equipment")).FirstOrDefault().Id.Value;
             long dropboxId = _taxonomyManager.MigrationOriginEntities.Where(w => w.Identifier.Contains("Dropbox")).FirstOrDefault().Id.Value;
             long imageId = _taxonomyManager.AssetTypeEntities.Where(w => w.Identifier.Equals("M.AssetType.Design")).FirstOrDefault().Id.Value;
             long imageUsageIds = _taxonomyManager.AssetUsageEntities.Where(w => w.Identifier.Equals("CV.AssetUsage.Design")).FirstOrDefault().Id.Value;

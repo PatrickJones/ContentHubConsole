@@ -364,7 +364,7 @@ namespace ContentHubConsole
         public static async Task DefaultExecution(IWebMClient mClient)
         {
             var uploadMgr = new UploadManager(mClient, (string)Configuration["Sandboxes:0:Covetrus"], _contentHubToken);
-            var directoryPath = ConaCCStrategicAccountsAssetDetailer.UploadPath;
+            var directoryPath = ConaCCEquipmentAssetDetailer.UploadPath;
             await uploadMgr.UploadLocalDirectory(directoryPath, SearchOption.AllDirectories);
             await uploadMgr.UploadLargeFileLocalDirectory();
 
@@ -382,7 +382,7 @@ namespace ContentHubConsole
             //        failedFiles.Add(uploadFailedFile);
             //    }
 
-            //    var gpmRetry = new ConaCCStrategicAccountsAssetDetailer(mClient, failedFiles);
+            //    var gpmRetry = new ConaCCEquipmentAssetDetailer(mClient, failedFiles);
             //    await gpmRetry.UpdateAllAssets();
             //    await gpmRetry.SaveAllAssets();
 
@@ -416,7 +416,7 @@ namespace ContentHubConsole
             await uploadMgr.UploadMissingFiles(uploads);
             await uploadMgr.UploadLargeFileLocalDirectory();
 
-            var gpm = new ConaCCStrategicAccountsAssetDetailer(mClient, uploadMgr.DirectoryFileUploadResponses);
+            var gpm = new ConaCCEquipmentAssetDetailer(mClient, uploadMgr.DirectoryFileUploadResponses);
             await gpm.UpdateAllAssets();
             //await gpm.SaveAllAssets();
 
@@ -430,7 +430,7 @@ namespace ContentHubConsole
             //        failedFiles.Add(uploadFailedFile);
             //    }
 
-            //    var gpmRetry = new ConaCCStrategicAccountsAssetDetailer(mClient, failedFiles);
+            //    var gpmRetry = new ConaCCEquipmentAssetDetailer(mClient, failedFiles);
             //    await gpmRetry.UpdateAllAssets();
             //    await gpmRetry.SaveAllAssets();
 
@@ -622,7 +622,7 @@ namespace ContentHubConsole
 
             }
 
-            var gpm = new ConaCCStrategicAccountsAssetDetailer(mClient, uploads);
+            var gpm = new ConaCCEquipmentAssetDetailer(mClient, uploads);
             await gpm.UpdateAllAssets();
             await gpm.SaveAllAssets();
 
@@ -651,7 +651,7 @@ namespace ContentHubConsole
         public static async Task ReloadAssetsWithZeroFileSizeExecution(IWebMClient mClient)
         {
             var uploadMgr = new UploadManager(mClient, (string)Configuration["Sandboxes:0:Covetrus"], _contentHubToken);
-            //var directoryPath = ConaCCStrategicAccountsAssetDetailer.UploadPath;
+            //var directoryPath = ConaCCEquipmentAssetDetailer.UploadPath;
             var uploads = await GetZeroFiles(mClient);
             await uploadMgr.UploadLocalDirectoryVersions(uploads);
             await uploadMgr.UploadLargeFileLocalDirectoryVersions();
@@ -663,7 +663,7 @@ namespace ContentHubConsole
         public static async Task ReloadModifiedAssetsExecution(IWebMClient mClient)
         {
             var uploadMgr = new UploadManager(mClient, (string)Configuration["Sandboxes:0:Covetrus"], _contentHubToken);
-            //var directoryPath = ConaCCStrategicAccountsAssetDetailer.UploadPath;
+            //var directoryPath = ConaCCEquipmentAssetDetailer.UploadPath;
             var uploads = await GetModifiedFiles(mClient);
             await uploadMgr.UploadLocalDirectoryVersions(uploads);
             await uploadMgr.UploadLargeFileLocalDirectoryVersions();
@@ -675,7 +675,7 @@ namespace ContentHubConsole
         public static async Task MigratedAssetsWithNoTypeExecution(IWebMClient mClient, bool checkOriginPath)
         {
             var uploadMgr = new UploadManager(mClient, (string)Configuration["Sandboxes:0:Covetrus"], _contentHubToken);
-            //var directoryPath = ConaCCStrategicAccountsAssetDetailer.UploadPath;
+            //var directoryPath = ConaCCEquipmentAssetDetailer.UploadPath;
             //await uploadMgr.UploadLocalDirectory(directoryPath, SearchOption.AllDirectories);
             //await uploadMgr.UploadLargeFileLocalDirectory();
 
@@ -683,7 +683,7 @@ namespace ContentHubConsole
             //var mig = await em.GetMigratedAssetsWithNoType(checkOriginPath);
             var mig = await em.GetMigratedAssetsWithPathAndNoType(checkOriginPath);
 
-            var gpm = new ConaCCStrategicAccountsAssetDetailer(mClient, mig);// uploadMgr.DirectoryFileUploadResponses);
+            var gpm = new ConaCCEquipmentAssetDetailer(mClient, mig);// uploadMgr.DirectoryFileUploadResponses);
             await gpm.UpdateAllAssets();
             //await gpm.SaveAllAssets();
 
@@ -697,7 +697,7 @@ namespace ContentHubConsole
             //        failedFiles.Add(uploadFailedFile);
             //    }
 
-            //    var gpmRetry = new ConaCCStrategicAccountsAssetDetailer(mClient, failedFiles);
+            //    var gpmRetry = new ConaCCEquipmentAssetDetailer(mClient, failedFiles);
             //    await gpmRetry.UpdateAllAssets();
             //    await gpmRetry.SaveAllAssets();
 
@@ -721,14 +721,14 @@ namespace ContentHubConsole
         public static async Task MigratedAssetsWithNoAssignedProduct(IWebMClient mClient)
         {
             var uploadMgr = new UploadManager(mClient, (string)Configuration["Sandboxes:0:Covetrus"], _contentHubToken);
-            //var directoryPath = ConaCCStrategicAccountsAssetDetailer.UploadPath;
+            //var directoryPath = ConaCCEquipmentAssetDetailer.UploadPath;
             //await uploadMgr.UploadLocalDirectory(directoryPath, SearchOption.AllDirectories);
             //await uploadMgr.UploadLargeFileLocalDirectory();
 
             var em = new ProductManager(mClient);
             var mig = await em.GetMigratedAssetsWithAssignedProducts();
 
-            var gpm = new ConaCCStrategicAccountsAssetDetailer(mClient, mig);// uploadMgr.DirectoryFileUploadResponses);
+            var gpm = new ConaCCEquipmentAssetDetailer(mClient, mig);// uploadMgr.DirectoryFileUploadResponses);
             await gpm.SaveAllAssets();
 
             if (gpm._failedAssets.Any())
@@ -741,7 +741,7 @@ namespace ContentHubConsole
                     failedFiles.Add(uploadFailedFile);
                 }
 
-                var gpmRetry = new ConaCCStrategicAccountsAssetDetailer(mClient, failedFiles);
+                var gpmRetry = new ConaCCEquipmentAssetDetailer(mClient, failedFiles);
                 await gpmRetry.UpdateAllAssets();
                 //await gpmRetry.SaveAllAssets();
 
@@ -765,14 +765,14 @@ namespace ContentHubConsole
         public static async Task MigratedAssetsWithNoAssignedCatalog(IWebMClient mClient)
         {
             var uploadMgr = new UploadManager(mClient, (string)Configuration["Sandboxes:0:Covetrus"], _contentHubToken);
-            //var directoryPath = ConaCCStrategicAccountsAssetDetailer.UploadPath;
+            //var directoryPath = ConaCCEquipmentAssetDetailer.UploadPath;
             //await uploadMgr.UploadLocalDirectory(directoryPath, SearchOption.AllDirectories);
             //await uploadMgr.UploadLargeFileLocalDirectory();
 
             var em = new ProductManager(mClient);
             var mig = await em.GetMigratedAssetsWithAssignedCatalog();
 
-            var gpm = new ConaCCStrategicAccountsAssetDetailer(mClient, mig);// uploadMgr.DirectoryFileUploadResponses);
+            var gpm = new ConaCCEquipmentAssetDetailer(mClient, mig);// uploadMgr.DirectoryFileUploadResponses);
             await gpm.SaveAllAssets();
 
             if (gpm._failedAssets.Any())
@@ -785,7 +785,7 @@ namespace ContentHubConsole
                     failedFiles.Add(uploadFailedFile);
                 }
 
-                var gpmRetry = new ConaCCStrategicAccountsAssetDetailer(mClient, failedFiles);
+                var gpmRetry = new ConaCCEquipmentAssetDetailer(mClient, failedFiles);
                 await gpmRetry.UpdateAllAssets();
                 await gpmRetry.SaveAllAssets();
 

@@ -194,7 +194,7 @@ namespace ContentHubConsole.Entities
                             && e.Property("OriginPath").Contains("Dropbox (Covetrus)")
                             && e.Property("OriginPath").Contains(" Creative Campaigns (1)")
                             && (e.Property("OriginPath").Contains("2020") || e.Property("OriginPath").Contains("2021"))
-                            && e.Property("OriginPath").Contains("Strategic Accounts")
+                            && e.Property("OriginPath").Contains("Equipment")
                             //&& e.Property("OriginPath").Contains("Photography")
                             //&& (e.Property("Title") == "3006157_3004723_ENG_LEFT.jpg")
                             && e.ModifiedOn > dateMin
