@@ -191,26 +191,39 @@ namespace ContentHubConsole.Entities
                             && e.Parent("AssetTypeToAsset") == null
                             && e.Parent("BusinessDomainToAsset").In(32586)
                             //&& e.ModifiedByUsername == "patrick.jones@xcentium.com"
-                            && e.Property("OriginPath").Contains("Manual Upload")
+                            && e.Property("OriginPath").Contains("Dropbox (Covetrus)")
+                            && e.Property("OriginPath").Contains("Consumer Creative")
+                            && e.Property("OriginPath").Contains("SmartPak")
+                            && e.Property("OriginPath").Contains("IMAGES")
+                            && e.Property("OriginPath").Contains("Product")
                             //&& e.Property("OriginPath").Contains("Photography")
                             //&& (e.Property("Title") == "3006157_3004723_ENG_LEFT.jpg")
                             && e.ModifiedOn > dateMin
                           select e).Skip(curSkip).Take(curTake));
                     }
 
-                    var mq = await _webMClient.Querying.QueryAsync(query);
-                    if (mq.TotalNumberOfResults > 0 && iEntities.Count <= 7000)
+                    if (Program.TestMode)
                     {
-                        iEntities.AddRange(mq.Items.ToList());
-                        curSkip = curSkip + curTake;
-                        if (mq.Items.Count < curTake)
-                        {
-                            canQuery = false;
-                        }
+                        var mq = await _webMClient.Querying.QueryAsync(query);
+                        iEntities.AddRange(mq.Items.Take(Program.TestModeTake).ToList());
+                        canQuery = false;
                     }
                     else
                     {
-                        canQuery = false;
+                        var mq = await _webMClient.Querying.QueryAsync(query);
+                        if (mq.TotalNumberOfResults > 0 && iEntities.Count <= 7000)
+                        {
+                            iEntities.AddRange(mq.Items.ToList());
+                            curSkip = curSkip + curTake;
+                            if (mq.Items.Count < curTake)
+                            {
+                                canQuery = false;
+                            }
+                        }
+                        else
+                        {
+                            canQuery = false;
+                        }
                     }
                 }
 
