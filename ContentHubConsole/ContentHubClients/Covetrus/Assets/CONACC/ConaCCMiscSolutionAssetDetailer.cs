@@ -8,9 +8,9 @@ using System.Threading.Tasks;
 
 namespace ContentHubConsole.ContentHubClients.Covetrus.Assets.CONACC
 {
-    internal class ConaCCPharmaAssetDetailer : BaseDetailer
+    public class ConaCCMiscSolutionAssetDetailer : BaseDetailer
     {
-        public ConaCCPharmaAssetDetailer(IWebMClient webMClient, ICollection<FileUploadResponse> fileUploadResponses) : base(webMClient, fileUploadResponses)
+        public ConaCCMiscSolutionAssetDetailer(IWebMClient webMClient, ICollection<FileUploadResponse> fileUploadResponses) : base(webMClient, fileUploadResponses)
         {
         }
 
@@ -19,7 +19,7 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Assets.CONACC
             var results = new List<long>();
 
             await _taxonomyManager.LoadAllTaxonomies();
-            long spPhotoBusinessDomainId = _taxonomyManager.BusinessDomainEntities.Where(w => w.Identifier.Equals("Business.Domain.CONACC.Pharma")).FirstOrDefault().Id.Value;
+            long spPhotoBusinessDomainId = _taxonomyManager.BusinessDomainEntities.Where(w => w.Identifier.Equals("Business.Domain.CONACreativeCampaigns")).FirstOrDefault().Id.Value;
             long dropboxId = _taxonomyManager.MigrationOriginEntities.Where(w => w.Identifier.Contains("Dropbox")).FirstOrDefault().Id.Value;
             long imageId = _taxonomyManager.AssetTypeEntities.Where(w => w.Identifier.Equals("M.AssetType.Design")).FirstOrDefault().Id.Value;
             long imageUsageIds = _taxonomyManager.AssetUsageEntities.Where(w => w.Identifier.Equals("CV.AssetUsage.Design")).FirstOrDefault().Id.Value;
@@ -91,7 +91,7 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Assets.CONACC
             if (orgSpilt[3] == "2020")
             {
                 var folder = orgSpilt[5];
-                var litNumber = folder.Split('-').FirstOrDefault();
+                var litNumber = folder.Split('_').Skip(1).FirstOrDefault();
                 asset.SetLitNumber(litNumber);
             }
 
@@ -102,7 +102,6 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Assets.CONACC
                 asset.SetLitNumber(litNumber);
             }
         }
-
 
         public override string RemoveLocalPathPart(string originPath)
         {

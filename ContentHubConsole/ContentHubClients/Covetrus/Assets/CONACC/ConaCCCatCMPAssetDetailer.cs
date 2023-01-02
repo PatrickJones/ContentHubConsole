@@ -47,6 +47,7 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Assets.CONACC
                     SetSeason(asset);
                     //SetAdvertising(asset);
                     //await AddBrandFromPath(asset);
+                    SetLitNumber(asset);
 
                     SetYear(asset);
                     SetSpecificYear(asset);
@@ -73,6 +74,43 @@ namespace ContentHubConsole.ContentHubClients.Covetrus.Assets.CONACC
             return results.Count;
         }
 
+        public override string GetDescriptionFromOriginPath(string path)
+        {
+            if (!String.IsNullOrEmpty(path))
+            {
+                var split = path.Split('\\');
+                return DescriptionBuilder.BuildBulletString(split.ToArray());
+            }
+
+            return String.Empty;
+        }
+
+        public void SetLitNumber(CovetrusAsset asset)
+        {
+            var orgSpilt = asset.OriginPath.Split("\\").ToList();
+            if (orgSpilt[3] == "2020")
+            {
+                if (orgSpilt[4] == "Compounding")
+                {
+                    var folder = orgSpilt[5];
+                    var litNumber = folder.Split('_').Skip(1).FirstOrDefault();
+                    asset.SetLitNumber(litNumber);
+                }
+                else
+                {
+                    var folder = orgSpilt[5];
+                    var litNumber = folder.Split('-').FirstOrDefault();
+                    asset.SetLitNumber(litNumber);
+                }
+            }
+
+            if (orgSpilt[3] == "2022")
+            {
+                var folder = orgSpilt[5];
+                var litNumber = folder.Split('_').FirstOrDefault();
+                asset.SetLitNumber(litNumber);
+            }
+        }
         public override string RemoveLocalPathPart(string originPath)
         {
             var pathSplit = Program.IsVirtualMachine ? originPath.Split('\\').Skip(2).ToArray() : originPath.Split('\\').Skip(3).ToArray();

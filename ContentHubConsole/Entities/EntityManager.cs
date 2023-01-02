@@ -166,7 +166,7 @@ namespace ContentHubConsole.Entities
         {
             var iEntities = new List<IEntity>();
             var fileUploadResponses = new List<FileUploadResponse>();
-            var dateMin = new DateTime(2022, 12, 28);
+            var dateMin = new DateTime(2022, 12, 29);
             int curSkip = 0;
             int curTake = 2000;
             bool canQuery = true;
@@ -189,28 +189,40 @@ namespace ContentHubConsole.Entities
                          (from e in entities
                           where e.DefinitionName == "M.Asset"
                             && e.Parent("AssetTypeToAsset") == null
-                            && e.Parent("BusinessDomainToAsset").In(32586)
+                            && e.Parent("BusinessDomainToAsset").In(32585)
                             //&& e.ModifiedByUsername == "patrick.jones@xcentium.com"
-                            && e.Property("OriginPath").Contains("Manual Upload")
+                            && e.Property("OriginPath").Contains("Dropbox (Covetrus)")
+                            && e.Property("OriginPath").Contains(" Creative Campaigns (1)")
+                            && (e.Property("OriginPath").Contains("2020") || e.Property("OriginPath").Contains("2021"))
+                            && e.Property("OriginPath").Contains("Equipment")
                             //&& e.Property("OriginPath").Contains("Photography")
                             //&& (e.Property("Title") == "3006157_3004723_ENG_LEFT.jpg")
                             && e.ModifiedOn > dateMin
                           select e).Skip(curSkip).Take(curTake));
                     }
 
-                    var mq = await _webMClient.Querying.QueryAsync(query);
-                    if (mq.TotalNumberOfResults > 0 && iEntities.Count <= 7000)
+                    if (Program.TestMode)
                     {
-                        iEntities.AddRange(mq.Items.ToList());
-                        curSkip = curSkip + curTake;
-                        if (mq.Items.Count < curTake)
-                        {
-                            canQuery = false;
-                        }
+                        var mq = await _webMClient.Querying.QueryAsync(query);
+                        iEntities.AddRange(mq.Items.Take(Program.TestModeTake).ToList());
+                        canQuery = false;
                     }
                     else
                     {
-                        canQuery = false;
+                        var mq = await _webMClient.Querying.QueryAsync(query);
+                        if (mq.TotalNumberOfResults > 0 && iEntities.Count <= 7000)
+                        {
+                            iEntities.AddRange(mq.Items.ToList());
+                            curSkip = curSkip + curTake;
+                            if (mq.Items.Count < curTake)
+                            {
+                                canQuery = false;
+                            }
+                        }
+                        else
+                        {
+                            canQuery = false;
+                        }
                     }
                 }
 
