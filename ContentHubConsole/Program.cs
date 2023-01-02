@@ -167,14 +167,14 @@ namespace ContentHubConsole
                 //tasks.Add(MissingFileExecution(mClient));
                 //await MissingFileExecutionUsingLogicApp(mClient);
                 //await MigratedAssetsWithNoTypeExecution(mClient, true);
-                //await ReloadAssetsWithZeroFileSizeExecution(mClient);
+                await ReloadAssetsWithZeroFileSizeExecution(mClient);
                 //await ReloadModifiedAssetsExecution(mClient);
                 ////await MigratedAssetsWithNoAssignedProduct(mClient);
                 //await MigratedAssetsWithNoAssignedCatalog(mClient);
 
 
                 //await tasks.WhenAll();
-                await MigratedAssetsWithNoTypeExecution(mClient, true);
+                //await MigratedAssetsWithNoTypeExecution(mClient, true);
 
 
 
@@ -812,9 +812,10 @@ namespace ContentHubConsole
 
             var query = Query.CreateQuery(entities =>
                  (from e in entities
-                  where e.Property("OriginPath").Contains("Categories") 
-                    && e.Property("OriginPath").Contains("CS")
-                    && e.CreatedOn > DateTime.Today.AddDays(-1)
+                  where e.Property("OriginPath").Contains("SmartPak") 
+                    && e.Property("OriginPath").Contains("IMAGES")
+                    && e.Parent("BusinessDomainToAsset").In(32826)
+                    //&& e.CreatedOn > DateTime.Today.AddDays(-1)
                     && e.Property("Filesize") == 0
                   select e).Skip(0).Take(3000)); ;
             var mq = await mClient.Querying.QueryAsync(query);
@@ -839,18 +840,18 @@ namespace ContentHubConsole
             foreach (var file in files.Distinct())
             {
                 DateTime modifyTime = System.IO.File.GetLastWriteTime(file);
-                if (modifyTime > DateTime.Now.AddDays(-9))
+                if (modifyTime > new DateTime(2022, 12, 1))
                 {
                     var fileInfo = new FileInfo(file);
                     filenames.Add(fileInfo.FullName, fileInfo.Name);
 
                     var query = Query.CreateQuery(entities =>
                      (from e in entities
-                      where e.Property("OriginPath").Contains("Product Images")
-                        && e.Property("OriginPath").Contains("Hybris Ready")
-                        && e.CreatedOn > DateTime.Today.AddDays(-9)
+                      where e.Property("OriginPath").Contains("_North America (1)")
+                        && e.Property("OriginPath").Contains("Categories")
+                        && e.CreatedOn > new DateTime(2022, 12, 10)
                         && e.Property("Title") == fileInfo.Name
-                      select e).Skip(0).Take(1000));
+                      select e).Skip(0).Take(3000));
                     var mq = await mClient.Querying.QueryAsync(query);
                     var items = mq.Items.ToList();
                     var zeroFiles = IsVirtualMachine ? items.Select(s => new { Id = s.Id.Value, Filename = $@"F:{(string)s.GetPropertyValue("OriginPath")}" }).ToList() : items.Select(s => new { Id = s.Id.Value, Filename = $@"C:\Users\ptjhi{(string)s.GetPropertyValue("OriginPath")}" }).ToList();
